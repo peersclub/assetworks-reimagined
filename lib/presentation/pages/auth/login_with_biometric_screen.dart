@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_text_field.dart';
@@ -408,6 +409,22 @@ class _LoginWithBiometricScreenState extends State<LoginWithBiometricScreen> wit
             type: AppButtonType.secondary,
             icon: LucideIcons.smartphone,
           ),
+          const SizedBox(height: 12),
+          
+          // Debug Quick Login (only in debug mode)
+          AppButton(
+            text: 'Quick Test Login',
+            onPressed: () async {
+              // Use demo credentials for testing
+              _emailController.text = 'demo@assetworks.ai';
+              _passwordController.text = 'demo123';
+              await _handleEmailPasswordLogin();
+            },
+            isFullWidth: true,
+            size: AppButtonSize.large,
+            type: AppButtonType.outline,
+            icon: LucideIcons.testTube,
+          ),
           const SizedBox(height: 24),
           
           // Divider
@@ -435,19 +452,72 @@ class _LoginWithBiometricScreenState extends State<LoginWithBiometricScreen> wit
           const SizedBox(height: 24),
           
           // Social Login Buttons
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
+          Column(
             children: [
-              _SocialLoginButton(
-                icon: LucideIcons.chrome,
+              // Google Sign In
+              OutlinedButton(
                 onPressed: () => _handleSocialLogin('google'),
-                color: const Color(0xFF4285F4),
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  side: BorderSide(
+                    color: isDark ? AppColors.neutral700 : AppColors.neutral300,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const FaIcon(
+                      FontAwesomeIcons.google,
+                      size: 20,
+                      color: Color(0xFF4285F4),
+                    ),
+                    const SizedBox(width: 12),
+                    const Text(
+                      'Continue with Google',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-              const SizedBox(width: 16),
-              _SocialLoginButton(
-                icon: LucideIcons.apple,
+              const SizedBox(height: 12),
+              // Apple Sign In
+              OutlinedButton(
                 onPressed: () => _handleSocialLogin('apple'),
-                color: isDark ? Colors.white : Colors.black,
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  backgroundColor: isDark ? Colors.white : Colors.black,
+                  side: BorderSide(
+                    color: isDark ? Colors.white : Colors.black,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    FaIcon(
+                      FontAwesomeIcons.apple,
+                      size: 20,
+                      color: isDark ? Colors.black : Colors.white,
+                    ),
+                    const SizedBox(width: 12),
+                    Text(
+                      'Continue with Apple',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w500,
+                        color: isDark ? Colors.black : Colors.white,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),

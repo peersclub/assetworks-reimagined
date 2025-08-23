@@ -5,13 +5,14 @@ import 'package:lucide_icons/lucide_icons.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/services/haptic_service.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_text_field.dart';
 import '../../controllers/auth_controller.dart';
 import '../../controllers/profile_controller.dart';
 import '../../controllers/widget_controller.dart';
-import '../../widgets/widget_card.dart';
+import '../../widgets/compact_widget_card.dart';
 
 class EnhancedProfileScreen extends StatefulWidget {
   const EnhancedProfileScreen({Key? key}) : super(key: key);
@@ -61,19 +62,21 @@ class _EnhancedProfileScreenState extends State<EnhancedProfileScreen>
     super.dispose();
   }
   
-  void _loadUserData() {
-    _profileController.loadCurrentUserProfile();
-    _widgetController.loadDashboardWidgets();
+  void _loadUserData() async {
+    await _profileController.loadCurrentUserProfile();
+    await _widgetController.loadDashboardWidgets();
     
     // Initialize edit controllers with current data
-    final user = _profileController.currentUser.value;
-    if (user != null) {
-      _nameController.text = user.displayName ?? '';
-      _bioController.text = user.bio ?? '';
-      _websiteController.text = user.website ?? '';
-      _twitterController.text = user.twitter ?? '';
-      _linkedinController.text = user.linkedin ?? '';
-    }
+    ever(_profileController.currentUser, (user) {
+      if (user != null) {
+        _nameController.text = user.username;
+        _bioController.text = user.bio ?? '';
+        // These fields don't exist in UserModel yet
+        _websiteController.text = '';
+        _twitterController.text = '';
+        _linkedinController.text = '';
+      }
+    });
   }
   
   Future<void> _pickImage() async {
@@ -86,18 +89,6 @@ class _EnhancedProfileScreenState extends State<EnhancedProfileScreen>
     }
   }
   
-  Future<void> _toggleBiometric() async {
-    if (_authController.isBiometricEnabled.value) {
-      await _authController.disableBiometric();
-    } else {
-      // Need to authenticate first
-      final email = _authController.user.value?.email ?? '';
-      if (email.isNotEmpty) {
-        // Show password dialog to enable biometric
-        _showPasswordDialog(email);
-      }
-    }
-  }
   
   void _showPasswordDialog(String email) {
     final passwordController = TextEditingController();
@@ -140,7 +131,7 @@ class _EnhancedProfileScreenState extends State<EnhancedProfileScreen>
   
   Future<void> _saveProfile() async {
     final updateData = {
-      'display_name': _nameController.text,
+      'username': _nameController.text,
       'bio': _bioController.text,
       'website': _websiteController.text,
       'twitter': _twitterController.text,
@@ -230,17 +221,33 @@ class _EnhancedProfileScreenState extends State<EnhancedProfileScreen>
                                               fit: BoxFit.cover,
                                             ),
                                           )
-                                        : user?.profilePhoto != null
+                                        : user?.profilePicture != null && user!.profilePicture!.isNotEmpty
                                             ? ClipRRect(
                                                 borderRadius: BorderRadius.circular(47),
                                                 child: Image.network(
-                                                  user!.profilePhoto!,
+                                                  user.profilePicture!,
                                                   fit: BoxFit.cover,
+                                                  errorBuilder: (context, error, stackTrace) {
+                                                    return Center(
+                                                      child: Text(
+                                                        user.username.isNotEmpty
+                                                            ? user.username.substring(0, user.username.length >= 2 ? 2 : 1).toUpperCase()
+                                                            : 'U',
+                                                        style: TextStyle(
+                                                          color: AppColors.primary,
+                                                          fontSize: 36,
+                                                          fontWeight: FontWeight.bold,
+                                                        ),
+                                                      ),
+                                                    );
+                                                  },
                                                 ),
                                               )
                                             : Center(
                                                 child: Text(
-                                                  user?.email?.substring(0, 1).toUpperCase() ?? 'U',
+                                                  user?.username != null && user!.username.isNotEmpty
+                                                      ? user.username.substring(0, user.username.length >= 2 ? 2 : 1).toUpperCase()
+                                                      : 'U',
                                                   style: TextStyle(
                                                     color: AppColors.primary,
                                                     fontSize: 36,
@@ -302,7 +309,7 @@ class _EnhancedProfileScreenState extends State<EnhancedProfileScreen>
                               return Column(
                                 children: [
                                   Text(
-                                    user?.displayName ?? user?.email ?? 'User',
+                                    user?.username ?? user?.email ?? 'User',
                                     style: const TextStyle(
                                       color: Colors.white,
                                       fontSize: 20,
@@ -328,7 +335,7 @@ class _EnhancedProfileScreenState extends State<EnhancedProfileScreen>
                             return Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                _buildStat('Widgets', user?.widgetsCount ?? 0),
+                                _buildStat('Widgets', user?.widgetCount ?? 0),
                                 const SizedBox(width: 30),
                                 _buildStat('Followers', user?.followersCount ?? 0),
                                 const SizedBox(width: 30),
@@ -427,48 +434,113 @@ class _EnhancedProfileScreenState extends State<EnhancedProfileScreen>
         padding: const EdgeInsets.all(16),
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 2,
-          childAspectRatio: 0.85,
+          childAspectRatio: 1.0,  // Square aspect ratio for compact cards
           crossAxisSpacing: 12,
           mainAxisSpacing: 12,
         ),
         itemCount: widgets.length,
         itemBuilder: (context, index) {
-          return WidgetCard(widget: widgets[index]);
+          final widget = widgets[index];
+          // Get the display name from the current user
+          final currentUser = _profileController.currentUser.value;
+          String displayName = currentUser?.username ?? 'User';
+          
+          return CompactWidgetCard(
+            title: widget.title,
+            author: displayName,
+            date: DateTime.fromMillisecondsSinceEpoch(widget.createdAt * 1000),
+            likes: widget.likes,
+            category: widget.category,
+            onTap: () => Get.toNamed('/widget-view', arguments: widget),
+          );
         },
       );
     });
   }
   
   Widget _buildActivityTab() {
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        _buildActivityItem(
-          icon: LucideIcons.plus,
-          title: 'Created a new widget',
-          subtitle: 'Stock Price Tracker',
-          time: '2 hours ago',
-        ),
-        _buildActivityItem(
-          icon: LucideIcons.gitFork,
-          title: 'Remixed a widget',
-          subtitle: 'Crypto Portfolio Dashboard',
-          time: '5 hours ago',
-        ),
-        _buildActivityItem(
-          icon: LucideIcons.heart,
-          title: 'Liked a widget',
-          subtitle: 'AI Market Predictor',
-          time: '1 day ago',
-        ),
-        _buildActivityItem(
-          icon: LucideIcons.userPlus,
-          title: 'Started following',
-          subtitle: 'John Doe',
-          time: '2 days ago',
-        ),
-      ],
-    );
+    return Obx(() {
+      final activities = _profileController.activities;
+      
+      if (_profileController.isLoading.value) {
+        return const Center(child: CircularProgressIndicator());
+      }
+      
+      if (activities.isEmpty) {
+        return Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(LucideIcons.activity, size: 64, color: AppColors.neutral500),
+              const SizedBox(height: 16),
+              const Text('No recent activity'),
+              const SizedBox(height: 8),
+              Text(
+                'Your activity will appear here',
+                style: TextStyle(
+                  color: AppColors.neutral600,
+                  fontSize: 14,
+                ),
+              ),
+            ],
+          ),
+        );
+      }
+      
+      return ListView.builder(
+        padding: const EdgeInsets.all(16),
+        itemCount: activities.length,
+        itemBuilder: (context, index) {
+          final activity = activities[index];
+          return _buildActivityItem(
+            icon: _getActivityIcon(activity['icon'] ?? 'activity'),
+            title: activity['title'] ?? '',
+            subtitle: activity['description'] ?? '',
+            time: _formatActivityTime(activity['timestamp']),
+          );
+        },
+      );
+    });
+  }
+  
+  IconData _getActivityIcon(String iconName) {
+    switch (iconName) {
+      case 'plus':
+        return LucideIcons.plus;
+      case 'heart':
+        return LucideIcons.heart;
+      case 'userPlus':
+        return LucideIcons.userPlus;
+      case 'gitFork':
+        return LucideIcons.gitFork;
+      default:
+        return LucideIcons.activity;
+    }
+  }
+  
+  String _formatActivityTime(dynamic timestamp) {
+    if (timestamp == null) return '';
+    
+    try {
+      final DateTime time = timestamp is DateTime 
+          ? timestamp 
+          : DateTime.parse(timestamp.toString());
+      
+      final now = DateTime.now();
+      final difference = now.difference(time);
+      
+      if (difference.inMinutes < 60) {
+        return '${difference.inMinutes}m ago';
+      } else if (difference.inHours < 24) {
+        return '${difference.inHours}h ago';
+      } else if (difference.inDays < 7) {
+        return '${difference.inDays}d ago';
+      } else {
+        return '${time.day}/${time.month}/${time.year}';
+      }
+    } catch (e) {
+      return '';
+    }
   }
   
   Widget _buildActivityItem({
@@ -543,14 +615,8 @@ class _EnhancedProfileScreenState extends State<EnhancedProfileScreen>
                   const SizedBox(height: 20),
                 ],
                 
-                if (user?.website != null && user!.website!.isNotEmpty)
-                  _buildInfoRow(LucideIcons.globe, 'Website', user.website!),
-                
-                if (user?.twitter != null && user!.twitter!.isNotEmpty)
-                  _buildInfoRow(LucideIcons.twitter, 'Twitter', user.twitter!),
-                
-                if (user?.linkedin != null && user!.linkedin!.isNotEmpty)
-                  _buildInfoRow(LucideIcons.linkedin, 'LinkedIn', user.linkedin!),
+                // Website, Twitter, LinkedIn fields not in UserModel yet
+                // Will be added when backend supports these fields
                 
                 _buildInfoRow(
                   LucideIcons.calendar,
@@ -592,27 +658,29 @@ class _EnhancedProfileScreenState extends State<EnhancedProfileScreen>
       padding: const EdgeInsets.all(16),
       children: [
         // Biometric Authentication
-        Obx(() {
-          final biometricType = _authController.biometricType.value;
-          final isEnabled = _authController.isBiometricEnabled.value;
-          
-          if (biometricType.isEmpty) {
-            return const SizedBox.shrink();
-          }
-          
-          return Card(
-            child: SwitchListTile(
-              title: Text('$biometricType Login'),
-              subtitle: Text('Use $biometricType for quick access'),
+        Card(
+          child: Obx(() {
+            final biometricType = _authController.biometricType.value;
+            final isEnabled = _authController.isBiometricEnabled.value;
+            
+            // Show Face ID by default if no biometric is detected
+            final displayType = biometricType.isNotEmpty ? biometricType : 'Face ID';
+            
+            return SwitchListTile(
+              title: Text('$displayType Login'),
+              subtitle: Text('Use $displayType for quick access'),
               secondary: Icon(
-                biometricType == 'Face ID' ? Icons.face : Icons.fingerprint,
+                displayType == 'Face ID' ? Icons.face : Icons.fingerprint,
                 color: AppColors.primary,
               ),
               value: isEnabled,
-              onChanged: (value) => _toggleBiometric(),
-            ),
-          );
-        }),
+              onChanged: biometricType.isNotEmpty ? (value) {
+                HapticService.lightImpact();
+                _toggleBiometric();
+              } : null,
+            );
+          }),
+        ),
         
         const SizedBox(height: 12),
         
@@ -700,13 +768,58 @@ class _EnhancedProfileScreenState extends State<EnhancedProfileScreen>
               ),
             );
           },
-          variant: AppButtonVariant.danger,
+          type: AppButtonType.danger,
           isFullWidth: true,
         ),
       ],
     );
   }
   
+  void _toggleBiometric() async {
+    final isEnabled = _authController.isBiometricEnabled.value;
+    
+    if (isEnabled) {
+      // Disable biometric
+      await _authController.disableBiometric();
+      Get.snackbar(
+        'Success',
+        'Biometric authentication disabled',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    } else {
+      // Enable biometric - need to get credentials
+      Get.dialog(
+        AlertDialog(
+          title: Text('Enable ${_authController.biometricType.value}'),
+          content: Text('To enable ${_authController.biometricType.value}, please confirm your credentials.'),
+          actions: [
+            TextButton(
+              onPressed: () => Get.back(),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () async {
+                Get.back();
+                // For now, we'll need the user to re-authenticate
+                // In a real app, you'd prompt for password or use stored credentials
+                final user = _authController.user.value;
+                if (user != null && user.email.isNotEmpty) {
+                  // You might want to show a password dialog here
+                  Get.snackbar(
+                    'Info',
+                    'Please sign out and sign in again to enable biometric authentication',
+                    snackPosition: SnackPosition.BOTTOM,
+                  );
+                }
+              },
+              child: const Text('Continue'),
+            ),
+          ],
+        ),
+      );
+    }
+  }
+
   String _formatDate(DateTime? date) {
     if (date == null) return 'Unknown';
     final months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 

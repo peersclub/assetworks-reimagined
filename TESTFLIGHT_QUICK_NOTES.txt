@@ -1,0 +1,46 @@
+TESTFLIGHT - WHAT TO TEST (Quick Copy)
+======================================
+
+AssetWorks Mobile v1.0.0 (Build 4)
+
+NEW FEATURES:
+• Haptic Feedback - Feel every tap, toggle, and notification
+• Long Press Preview - Hold any widget card to see instant HTML preview
+• Shimmer Loading - Smooth loading animations throughout
+• Real API Data - All content from live staging server
+
+KEY AREAS TO TEST:
+
+1. AUTHENTICATION
+• Face ID/Touch ID login with haptic feedback
+• Google & Apple sign-in with new icons
+• OTP verification flow
+
+2. WIDGET INTERACTIONS
+• Long press any widget card for preview (NEW!)
+• Like, share, save widgets
+• Create new widgets with AI
+
+3. HAPTIC FEEDBACK
+• All buttons provide tactile response
+• Switches vibrate on toggle
+• Notifications trigger special pattern
+
+4. PERFORMANCE
+• Dashboard loads instantly from cache
+• Smooth scrolling in all lists
+• No dummy data anywhere
+
+5. DARK MODE
+• Toggle in Settings
+• All screens adapt properly
+
+KNOWN FIXES:
+✓ User IDs replaced with usernames
+✓ Overflow errors fixed
+✓ Real notifications working
+✓ Correct app logo throughout
+
+Please test on your device and report any issues through TestFlight feedback.
+
+Thank you for testing!

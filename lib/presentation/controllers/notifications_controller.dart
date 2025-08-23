@@ -1,7 +1,6 @@
 import 'package:get/get.dart';
-import 'package:dio/dio.dart';
-import '../../data/services/api_service.dart';
-import '../../core/constants/api_constants.dart';
+import '../../core/network/api_client.dart';
+import '../../core/services/haptic_service.dart';
 
 class NotificationModel {
   final String id;
@@ -44,7 +43,7 @@ class NotificationModel {
 }
 
 class NotificationsController extends GetxController {
-  final Dio _dio = Dio();
+  final ApiClient _apiClient = ApiClient();
   
   final RxList<NotificationModel> notifications = <NotificationModel>[].obs;
   final RxBool isLoading = false.obs;
@@ -54,62 +53,48 @@ class NotificationsController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    _initializeDio();
     fetchNotifications();
-  }
-  
-  void _initializeDio() {
-    _dio.options.baseUrl = ApiConstants.baseUrl;
-    _dio.options.headers = {
-      'Content-Type': 'application/json',
-      'Accept': 'application/json',
-    };
   }
   
   Future<void> fetchNotifications() async {
     try {
       isLoading.value = true;
       
-      // For now, just load default notifications since we don't have a real notifications endpoint
-      _loadDefaultNotifications();
+      // Fetch real notifications from API
+      final response = await _apiClient.getNotifications();
+      
+      if (response.statusCode == 200 && response.data != null) {
+        final List<dynamic> data = response.data['data'] ?? [];
+        
+        if (data.isNotEmpty) {
+          final newNotifications = data.map((n) => NotificationModel.fromJson(n)).toList();
+          
+          // Check if there are new unread notifications
+          final newUnreadCount = newNotifications.where((n) => !n.isRead).length;
+          if (newUnreadCount > unreadCount.value && unreadCount.value > 0) {
+            // Vibrate for new notifications
+            HapticService.notification();
+          }
+          
+          notifications.value = newNotifications;
+        } else {
+          // If no notifications, show empty state
+          notifications.value = [];
+        }
+        
+        unreadCount.value = notifications.where((n) => !n.isRead).length;
+      } else {
+        notifications.value = [];
+      }
       
     } catch (e) {
       print('Error fetching notifications: $e');
-      _loadDefaultNotifications();
+      notifications.value = [];
     } finally {
       isLoading.value = false;
     }
   }
   
-  void _loadDefaultNotifications() {
-    notifications.value = [
-      NotificationModel(
-        id: '1',
-        title: 'Analysis Complete',
-        message: 'Your portfolio analysis is ready to view',
-        type: 'analysis',
-        timestamp: DateTime.now().subtract(const Duration(minutes: 30)),
-        isRead: false,
-      ),
-      NotificationModel(
-        id: '2',
-        title: 'New Widget Shared',
-        message: 'Check out the latest market trends widget',
-        type: 'widget',
-        timestamp: DateTime.now().subtract(const Duration(hours: 2)),
-        isRead: false,
-      ),
-      NotificationModel(
-        id: '3',
-        title: 'Weekly Report',
-        message: 'Your weekly performance report is available',
-        type: 'report',
-        timestamp: DateTime.now().subtract(const Duration(days: 1)),
-        isRead: true,
-      ),
-    ];
-    unreadCount.value = notifications.where((n) => !n.isRead).length;
-  }
   
   Future<void> markAsRead(String notificationId) async {
     try {

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../theme/app_colors.dart';
+import '../services/haptic_service.dart';
 
 enum AppButtonType { primary, secondary, outline, text, danger }
 enum AppButtonSize { small, medium, large }
@@ -69,7 +70,10 @@ class AppButton extends StatelessWidget {
       case AppButtonType.secondary:
       case AppButtonType.danger:
         button = ElevatedButton(
-          onPressed: isLoading ? null : onPressed,
+          onPressed: isLoading ? null : onPressed != null ? () {
+            HapticService.mediumImpact();
+            onPressed!();
+          } : null,
           style: buttonStyle.copyWith(
             minimumSize: WidgetStateProperty.all(
               Size(isFullWidth ? double.infinity : 0, height),
@@ -82,7 +86,10 @@ class AppButton extends StatelessWidget {
         
       case AppButtonType.outline:
         button = OutlinedButton(
-          onPressed: isLoading ? null : onPressed,
+          onPressed: isLoading ? null : onPressed != null ? () {
+            HapticService.lightImpact();
+            onPressed!();
+          } : null,
           style: buttonStyle.copyWith(
             minimumSize: WidgetStateProperty.all(
               Size(isFullWidth ? double.infinity : 0, height),
@@ -95,7 +102,10 @@ class AppButton extends StatelessWidget {
         
       case AppButtonType.text:
         button = TextButton(
-          onPressed: isLoading ? null : onPressed,
+          onPressed: isLoading ? null : onPressed != null ? () {
+            HapticService.selectionClick();
+            onPressed!();
+          } : null,
           style: buttonStyle.copyWith(
             minimumSize: WidgetStateProperty.all(
               Size(isFullWidth ? double.infinity : 0, height),

@@ -4,6 +4,8 @@ import 'package:lucide_icons/lucide_icons.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/theme_controller.dart';
 import '../../../core/widgets/app_card.dart';
+import '../../../core/widgets/shimmer_loader.dart';
+import '../../../core/services/haptic_service.dart';
 import '../../controllers/widget_controller.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -192,6 +194,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
               const SizedBox(height: 16),
               
               Obx(() {
+                if (_widgetController.isLoading.value) {
+                  // Show shimmer loading
+                  return Column(
+                    children: List.generate(
+                      3,
+                      (index) => const Padding(
+                        padding: EdgeInsets.only(bottom: 12),
+                        child: ShimmerWidgetCard(),
+                      ),
+                    ),
+                  );
+                }
+                
                 if (_widgetController.dashboardWidgets.isEmpty) {
                   return AppCard(
                     child: Center(

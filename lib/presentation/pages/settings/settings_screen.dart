@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/theme/theme_controller.dart';
+import '../../../core/services/haptic_service.dart';
+import '../../../data/release_notes_data.dart';
 import '../../controllers/auth_controller.dart';
 import '../../controllers/otp_controller.dart';
+import 'release_notes_screen.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({Key? key}) : super(key: key);
@@ -43,7 +47,9 @@ class SettingsScreen extends StatelessWidget {
                       ),
                       child: Center(
                         child: Text(
-                          user?.username?.substring(0, 2).toUpperCase() ?? 'U',
+                          user?.username != null && user!.username.isNotEmpty
+                              ? user.username.substring(0, user.username.length >= 2 ? 2 : 1).toUpperCase()
+                              : 'U',
                           style: TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
@@ -111,7 +117,10 @@ class SettingsScreen extends StatelessWidget {
                       subtitle: 'Theme preference (stored locally)',
                       trailing: Obx(() => Switch(
                         value: themeController.isDarkMode,
-                        onChanged: (value) => themeController.toggleTheme(),
+                        onChanged: (value) {
+                          HapticService.lightImpact();
+                          themeController.toggleTheme();
+                        },
                         activeColor: AppColors.primary,
                       )),
                     ),
@@ -162,6 +171,98 @@ class SettingsScreen extends StatelessWidget {
             
             const SizedBox(height: 20),
             
+            // Version & Updates Section
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Text(
+                'Version & Updates',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
+            
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: AppCard(
+                child: Column(
+                  children: [
+                    FutureBuilder<PackageInfo>(
+                      future: PackageInfo.fromPlatform(),
+                      builder: (context, snapshot) {
+                        final currentRelease = ReleaseNotesData.getCurrentRelease();
+                        final versionInfo = snapshot.hasData 
+                            ? '${snapshot.data!.version} (${snapshot.data!.buildNumber})'
+                            : '${currentRelease.version} (${currentRelease.buildNumber})';
+                        
+                        return _buildSettingItem(
+                          icon: LucideIcons.package,
+                          title: 'App Version',
+                          subtitle: versionInfo,
+                          trailing: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: AppColors.success.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(
+                              'LATEST',
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.success,
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                    _buildDivider(isDark),
+                    _buildSettingItem(
+                      icon: LucideIcons.rocket,
+                      title: 'What\'s New',
+                      subtitle: 'See all release notes and updates',
+                      onTap: () {
+                        HapticService.lightImpact();
+                        Get.to(() => const ReleaseNotesScreen());
+                      },
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              'NEW',
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.primary,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Icon(
+                            LucideIcons.chevronRight,
+                            size: 18,
+                            color: isDark ? AppColors.neutral400 : AppColors.neutral600,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            
+            const SizedBox(height: 20),
+            
             // About Section
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -182,16 +283,9 @@ class SettingsScreen extends StatelessWidget {
                 child: Column(
                   children: [
                     _buildSettingItem(
-                      icon: LucideIcons.info,
-                      title: 'Version',
-                      subtitle: '1.0.0',
-                      trailing: null,
-                    ),
-                    _buildDivider(isDark),
-                    _buildSettingItem(
                       icon: LucideIcons.globe,
                       title: 'API Status',
-                      subtitle: 'https://staging-api.assetworks.ai',
+                      subtitle: 'staging-api.assetworks.ai',
                       trailing: Container(
                         width: 8,
                         height: 8,
@@ -200,6 +294,22 @@ class SettingsScreen extends StatelessWidget {
                           shape: BoxShape.circle,
                         ),
                       ),
+                    ),
+                    _buildDivider(isDark),
+                    _buildSettingItem(
+                      icon: LucideIcons.building,
+                      title: 'Company',
+                      subtitle: 'AssetWorks AI Inc.',
+                    ),
+                    _buildDivider(isDark),
+                    _buildSettingItem(
+                      icon: LucideIcons.mail,
+                      title: 'Support',
+                      subtitle: 'support@assetworks.ai',
+                      onTap: () {
+                        HapticService.lightImpact();
+                        // TODO: Open email client
+                      },
                     ),
                   ],
                 ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'dart:io';
@@ -384,22 +385,48 @@ class _CreateWidgetScreenState extends State<CreateWidgetScreen> with SingleTick
           const SizedBox(height: 16),
           
           
-          // Suggested Prompts
-          Text(
-            'Suggested Prompts',
-            style: Theme.of(context).textTheme.titleMedium,
-          ),
-          const SizedBox(height: 12),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              _buildSuggestionChip('Stock price tracker with charts'),
-              _buildSuggestionChip('Expense calculator with categories'),
-              _buildSuggestionChip('Portfolio performance dashboard'),
-              _buildSuggestionChip('Cryptocurrency price monitor'),
-              _buildSuggestionChip('Budget planner with goals'),
-            ],
+          // Suggested Prompts Section
+          AppCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(
+                      LucideIcons.lightbulb,
+                      size: 20,
+                      color: Colors.amber,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Quick Start Ideas',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const Spacer(),
+                    TextButton(
+                      onPressed: _refreshSuggestions,
+                      child: Row(
+                        children: [
+                          Icon(LucideIcons.refreshCw, size: 14),
+                          const SizedBox(width: 4),
+                          const Text('More', style: TextStyle(fontSize: 13)),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: _getSuggestedPrompts().map((prompt) => 
+                    _buildEnhancedSuggestionChip(prompt['text']!, prompt['icon']!)
+                  ).toList(),
+                ),
+              ],
+            ),
           ),
           const SizedBox(height: 24),
           
@@ -779,6 +806,76 @@ class _CreateWidgetScreenState extends State<CreateWidgetScreen> with SingleTick
     );
   }
   
+  Widget _buildEnhancedSuggestionChip(String text, IconData icon) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () {
+          _promptController.text = text;
+          // Add haptic feedback
+          HapticFeedback.lightImpact();
+        },
+        borderRadius: BorderRadius.circular(20),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                AppColors.primary.withOpacity(0.1),
+                AppColors.primary.withOpacity(0.05),
+              ],
+            ),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: AppColors.primary.withOpacity(0.3),
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                icon,
+                size: 14,
+                color: AppColors.primary,
+              ),
+              const SizedBox(width: 6),
+              Flexible(
+                child: Text(
+                  text,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+  
+  List<Map<String, dynamic>> _getSuggestedPrompts() {
+    // Return context-aware prompts based on user's interests
+    return [
+      {'text': 'Real-time stock portfolio tracker', 'icon': LucideIcons.trendingUp},
+      {'text': 'AI-powered market sentiment analyzer', 'icon': LucideIcons.brain},
+      {'text': 'Crypto wallet performance dashboard', 'icon': LucideIcons.bitcoin},
+      {'text': 'Options trading profit calculator', 'icon': LucideIcons.calculator},
+      {'text': 'ESG investment screener', 'icon': LucideIcons.leaf},
+    ];
+  }
+  
+  void _refreshSuggestions() {
+    // TODO: Implement dynamic suggestion refresh
+    setState(() {});
+  }
+  
   Future<void> _pickFiles() async {
     await AppBottomSheet.showOptions(
       title: 'Add Attachments',
@@ -837,7 +934,7 @@ class _CreateWidgetScreenState extends State<CreateWidgetScreen> with SingleTick
   }
   
   void _showHistory() {
-    Get.toNamed('/widget-history');
+    Get.toNamed('/prompt-history');
   }
   
   void _showHelp() {

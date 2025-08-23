@@ -47,6 +47,8 @@ class DashboardController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    // Load data immediately on init with loading state
+    isLoading.value = true;
     loadDashboardData();
     _setupAutoRefresh();
   }
@@ -67,11 +69,20 @@ class DashboardController extends GetxController {
       historyItems.clear();
     }
     
-    if (isLoading.value || (!hasMore.value && !reset)) return;
+    // Skip loading check only for non-reset calls
+    if (!reset && (isLoading.value || !hasMore.value)) return;
     
     try {
-      isLoading.value = true;
+      // Only set loading if not already set (e.g., from onInit)
+      if (!isLoading.value) {
+        isLoading.value = true;
+      }
       error.value = '';
+      
+      // First try to load from cache for instant display
+      if (_currentPage == 1 && !reset) {
+        await _loadFromCache();
+      }
       
       // Load based on current tab
       if (currentTab.value == DashboardTab.saved) {
@@ -91,16 +102,21 @@ class DashboardController extends GetxController {
     } catch (e) {
       error.value = e.toString();
       
-      // Try to load from cache if network fails
-      await _loadFromCache();
+      // Try to load from cache if network fails and we haven't already
+      if (dashboardWidgets.isEmpty && historyItems.isEmpty) {
+        await _loadFromCache();
+      }
       
-      Get.snackbar(
-        'Error',
-        'Failed to load dashboard data: ${error.value}',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-      );
+      // Only show error if we have no data at all
+      if (dashboardWidgets.isEmpty && historyItems.isEmpty) {
+        Get.snackbar(
+          'Error',
+          'Failed to load dashboard data: ${error.value}',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+        );
+      }
     } finally {
       isLoading.value = false;
     }

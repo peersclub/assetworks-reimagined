@@ -30,15 +30,24 @@ class ProfileController extends GetxController {
       final response = await _apiClient.getUserProfile();
       
       if (response.statusCode == 200 && response.data != null) {
-        currentUser.value = UserModel.fromJson(response.data['data']);
-        await loadUserWidgets(currentUser.value!.id);
-        await loadUserActivities(currentUser.value!.id);
+        print('Profile API Response: ${response.data}');
+        
+        // The API returns the user data directly, not wrapped in 'data'
+        final userData = response.data is Map && response.data.containsKey('data') 
+            ? response.data['data'] 
+            : response.data;
+            
+        if (userData != null) {
+          currentUser.value = UserModel.fromJson(userData);
+          await loadUserWidgets(currentUser.value!.id);
+          await loadUserActivities(currentUser.value!.id);
+        }
       }
     } catch (e) {
       print('Error loading profile: $e');
       Get.snackbar(
         'Error',
-        'Failed to load profile',
+        'Failed to load profile data',
         snackPosition: SnackPosition.BOTTOM,
       );
     } finally {
@@ -70,19 +79,30 @@ class ProfileController extends GetxController {
       final response = await _apiClient.getDashboardWidgets();
       
       if (response.statusCode == 200 && response.data != null) {
-        final List<dynamic> data = response.data['data'] ?? [];
-        userWidgets.value = data
-            .map((w) => WidgetResponseModel.fromJson(w))
-            .where((w) => w.userId == userId)
-            .toList();
+        print('Widgets API Response: ${response.data}');
+        
+        // Check if data is wrapped or direct
+        final widgetsData = response.data is Map && response.data.containsKey('data')
+            ? response.data['data']
+            : response.data;
+            
+        if (widgetsData is List) {
+          userWidgets.value = widgetsData
+              .map((w) => WidgetResponseModel.fromJson(w))
+              .toList();
+        } else {
+          userWidgets.value = [];
+        }
       }
     } catch (e) {
       print('Error loading user widgets: $e');
+      userWidgets.value = [];
     }
   }
   
   Future<void> loadUserActivities(String userId) async {
     // User activities endpoint not available in backend
+    // Keep empty until API is available
     activities.value = [];
   }
   

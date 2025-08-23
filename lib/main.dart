@@ -38,7 +38,12 @@ void main() async {
   await GetStorage.init();
   
   // Load environment variables
-  await dotenv.load(fileName: ".env");
+  try {
+    await dotenv.load(fileName: ".env");
+  } catch (e) {
+    print('Could not load .env file: $e');
+    // Continue without env file - use defaults
+  }
   
   // Set preferred orientations
   await SystemChrome.setPreferredOrientations([

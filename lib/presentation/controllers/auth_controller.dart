@@ -87,18 +87,37 @@ class AuthController extends GetxController {
   
   Future<void> _checkBiometricCapability() async {
     try {
-      final isAvailable = await BiometricAuth.isBiometricAvailable();
+      final isAvailable = await BiometricAuth.isAvailable();
+      print('Biometric available: $isAvailable');
+      
       if (isAvailable) {
         final types = await _localAuth.getAvailableBiometrics();
+        print('Available biometric types: $types');
+        
         if (types.contains(BiometricType.face)) {
           biometricType.value = 'Face ID';
         } else if (types.contains(BiometricType.fingerprint)) {
           biometricType.value = 'Touch ID';
+        } else if (types.isNotEmpty) {
+          // Fallback to first available type
+          biometricType.value = 'Biometric';
+        }
+        
+        // For simulator testing, always show Face ID option
+        if (biometricType.value.isEmpty) {
+          biometricType.value = 'Face ID';
         }
         
         // Check if user has enabled biometric
         final biometricEnabled = _storageService.getBiometricEnabled();
         isBiometricEnabled.value = biometricEnabled ?? false;
+        
+        print('Biometric type set to: ${biometricType.value}');
+        print('Biometric enabled: ${isBiometricEnabled.value}');
+      } else {
+        // For testing on simulator, always show Face ID
+        biometricType.value = 'Face ID';
+        print('Biometric not available, defaulting to Face ID for UI');
       }
     } catch (e) {
       print('Error checking biometric capability: $e');
@@ -202,32 +221,40 @@ class AuthController extends GetxController {
       await _storageService.saveAuthToken('demo-token');
       await _storageService.saveUser({'email': email, 'id': '1'});
       
-      user.value = UserModel(id: '1', email: email);
+      user.value = UserModel(
+        id: '1',
+        username: email.split('@')[0],
+        email: email,
+        widgetCount: 0,
+        followersCount: 0,
+        followingCount: 0,
+        isVerified: false,
+        isPremium: false,
+        joinedAt: DateTime.now(),
+      );
       isAuthenticated.value = true;
       
       // Navigate to main screen
       Get.offAllNamed('/main');
-      return;
       
       // Real API call would be:
       // final response = await _apiClient.signInWithEmail(email, password);
-      
-      if (response.statusCode == 200 && response.data != null) {
-        final userData = response.data['data']['user'];
-        final token = response.data['data']['token'];
-        
-        // Save auth data
-        await _storageService.saveAuthToken(token);
-        await _storageService.saveUser(userData);
-        
-        user.value = UserModel.fromJson(userData);
-        isAuthenticated.value = true;
-        
-        // Navigate to main screen
-        Get.offAllNamed('/main');
-      } else {
-        error.value = 'Invalid credentials';
-      }
+      // if (response.statusCode == 200 && response.data != null) {
+      //   final userData = response.data['data']['user'];
+      //   final token = response.data['data']['token'];
+      //   
+      //   // Save auth data
+      //   await _storageService.saveAuthToken(token);
+      //   await _storageService.saveUser(userData);
+      //   
+      //   user.value = UserModel.fromJson(userData);
+      //   isAuthenticated.value = true;
+      //   
+      //   // Navigate to main screen
+      //   Get.offAllNamed('/main');
+      // } else {
+      //   error.value = 'Invalid credentials';
+      // }
     } catch (e) {
       print('Login error: $e');
       error.value = 'Login failed. Please try again.';

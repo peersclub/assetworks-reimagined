@@ -69,6 +69,43 @@ class WidgetCard extends StatelessWidget {
     return count.toString();
   }
   
+  IconData _getCategoryIcon(String category) {
+    switch (category.toLowerCase()) {
+      case 'finance':
+      case 'banking':
+        return LucideIcons.dollarSign;
+      case 'technology':
+      case 'tech':
+        return LucideIcons.cpu;
+      case 'health':
+      case 'medical':
+        return LucideIcons.heart;
+      case 'education':
+        return LucideIcons.graduationCap;
+      case 'sports':
+        return LucideIcons.trophy;
+      case 'travel':
+        return LucideIcons.plane;
+      case 'food':
+        return LucideIcons.utensils;
+      case 'music':
+        return LucideIcons.music;
+      case 'gaming':
+        return LucideIcons.gamepad2;
+      case 'shopping':
+        return LucideIcons.shoppingCart;
+      case 'news':
+        return LucideIcons.newspaper;
+      case 'weather':
+        return LucideIcons.cloud;
+      case 'crypto':
+      case 'bitcoin':
+        return LucideIcons.bitcoin;
+      default:
+        return LucideIcons.layoutGrid;
+    }
+  }
+  
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -82,43 +119,44 @@ class WidgetCard extends StatelessWidget {
           Row(
             children: [
               Container(
-                width: 36,
-                height: 36,
+                width: 32,
+                height: 32,
                 decoration: BoxDecoration(
                   color: AppColors.primary.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(18),
+                  borderRadius: BorderRadius.circular(16),
                 ),
                 child: Center(
                   child: Text(
-                    author.isNotEmpty ? author[0].toUpperCase() : 'U',
+                    author.isNotEmpty && author != '-' && !author.startsWith('-') 
+                        ? author.split(' ').map((e) => e.isNotEmpty ? e[0] : '').take(2).join().toUpperCase()
+                        : 'U',
                     style: TextStyle(
                       color: AppColors.primary,
                       fontWeight: FontWeight.bold,
-                      fontSize: 16,
+                      fontSize: 12,
                     ),
                   ),
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 8),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    InkWell(
-                      onTap: onAuthorTap,
-                      child: Text(
-                        author,
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
-                        ),
+                    Text(
+                      author,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
                       ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                     Text(
                       _formatDate(date),
                       style: TextStyle(
-                        fontSize: 12,
+                        fontSize: 10,
                         color: isDark ? AppColors.textTertiaryDark : AppColors.textTertiaryLight,
                       ),
                     ),
@@ -126,9 +164,10 @@ class WidgetCard extends StatelessWidget {
                 ),
               ),
               PopupMenuButton<String>(
+                padding: EdgeInsets.zero,
                 icon: Icon(
                   LucideIcons.moreVertical,
-                  size: 20,
+                  size: 16,
                   color: isDark ? AppColors.neutral500 : AppColors.neutral600,
                 ),
                 onSelected: (value) {
@@ -183,13 +222,13 @@ class WidgetCard extends StatelessWidget {
             ],
           ),
           
-          const SizedBox(height: 12),
+          const SizedBox(height: 8),
           
           // Title
           Text(
             title,
             style: TextStyle(
-              fontSize: 16,
+              fontSize: 14,
               fontWeight: FontWeight.w600,
               color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
             ),
@@ -199,44 +238,47 @@ class WidgetCard extends StatelessWidget {
           
           // Description
           if (description != null && description!.isNotEmpty) ...[
-            const SizedBox(height: 8),
+            const SizedBox(height: 6),
             Text(
               description!,
               style: TextStyle(
-                fontSize: 14,
+                fontSize: 11,
                 color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
-                height: 1.4,
+                height: 1.3,
               ),
-              maxLines: 3,
+              maxLines: 2,
               overflow: TextOverflow.ellipsis,
             ),
           ],
           
-          // Tags
+          // Tags with icon
           if (tags.isNotEmpty) ...[
-            const SizedBox(height: 12),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: tags.map((tag) => Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(12),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Icon(
+                  _getCategoryIcon(tags.first),
+                  size: 12,
+                  color: AppColors.primary,
                 ),
-                child: Text(
-                  tag,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: AppColors.primary,
-                    fontWeight: FontWeight.w500,
+                const SizedBox(width: 4),
+                Expanded(
+                  child: Text(
+                    tags.first,
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: AppColors.primary,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
-              )).toList(),
+              ],
             ),
           ],
           
-          const SizedBox(height: 16),
+          const Spacer(),
           
           // Action buttons
           Row(
@@ -247,14 +289,14 @@ class WidgetCard extends StatelessWidget {
                 isActive: false,
                 onTap: onLike,
               ),
-              const SizedBox(width: 16),
+              const SizedBox(width: 12),
               _ActionButton(
                 icon: LucideIcons.messageCircle,
                 label: _formatCount(comments),
                 isActive: false,
                 onTap: onComment,
               ),
-              const SizedBox(width: 16),
+              const SizedBox(width: 12),
               _ActionButton(
                 icon: LucideIcons.share2,
                 label: _formatCount(shares),
@@ -262,19 +304,14 @@ class WidgetCard extends StatelessWidget {
                 onTap: onShare,
               ),
               const Spacer(),
-              IconButton(
-                onPressed: onSave,
-                icon: Icon(
+              GestureDetector(
+                onTap: onSave,
+                child: Icon(
                   isSaved ? LucideIcons.bookmarkMinus : LucideIcons.bookmark,
-                  size: 20,
+                  size: 16,
                   color: isSaved 
                       ? AppColors.primary 
                       : (isDark ? AppColors.neutral500 : AppColors.neutral600),
-                ),
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(
-                  minWidth: 32,
-                  minHeight: 32,
                 ),
               ),
             ],
@@ -307,22 +344,22 @@ class _ActionButton extends StatelessWidget {
     
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
+      borderRadius: BorderRadius.circular(4),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
               icon,
-              size: 18,
+              size: 14,
               color: color,
             ),
-            const SizedBox(width: 4),
+            const SizedBox(width: 2),
             Text(
               label,
               style: TextStyle(
-                fontSize: 13,
+                fontSize: 11,
                 color: color,
                 fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
               ),

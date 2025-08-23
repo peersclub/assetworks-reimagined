@@ -1,7 +1,7 @@
 name: assetworks_mobile_new
 description: "AssetWorks Mobile - Investment Intelligence Platform"
 publish_to: 'none'
-version: 1.0.0+2
+version: 1.0.0+4
 
 environment:
   sdk: ^3.7.0
@@ -70,6 +70,10 @@ dependencies:
   # Navigation
   app_links: ^3.4.1
   timeago: ^3.7.1
+  cached_network_image: ^3.4.1
+  flutter_cache_manager: ^3.4.1
+  country_flags: ^3.3.0
+  font_awesome_flutter: ^10.9.1
 
 dev_dependencies:
   flutter_test:

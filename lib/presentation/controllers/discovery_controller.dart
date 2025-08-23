@@ -8,6 +8,7 @@ class DiscoveryController extends GetxController {
   // Observable states
   final isLoading = false.obs;
   final isLoadingMore = false.obs;
+  final isLoadingTrending = false.obs;
   final widgets = <WidgetResponseModel>[].obs;
   final trendingWidgets = <WidgetResponseModel>[].obs;
   final guestWidgets = <WidgetResponseModel>[].obs;
@@ -24,8 +25,11 @@ class DiscoveryController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    loadWidgets();
-    loadTrendingWidgets();
+    // Load both widgets and trending in parallel for faster initial load
+    Future.wait([
+      loadWidgets(),
+      loadTrendingWidgets(),
+    ]);
   }
   
   Future<void> loadWidgets({bool refresh = false}) async {
@@ -78,6 +82,7 @@ class DiscoveryController extends GetxController {
   
   Future<void> loadTrendingWidgets() async {
     try {
+      isLoadingTrending.value = true;
       final response = await _apiClient.getTrendingWidgets();
       
       if (response.statusCode == 200 && response.data != null) {
@@ -88,6 +93,8 @@ class DiscoveryController extends GetxController {
       }
     } catch (e) {
       print('Error loading trending widgets: $e');
+    } finally {
+      isLoadingTrending.value = false;
     }
   }
   

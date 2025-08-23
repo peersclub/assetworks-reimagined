@@ -20,6 +20,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
   bool _acceptTerms = false;
+  bool _showPassword = false;
+  bool _showConfirmPassword = false;
   
   @override
   void dispose() {
@@ -29,6 +31,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     _confirmPasswordController.dispose();
     super.dispose();
   }
+  
   
   @override
   Widget build(BuildContext context) {
@@ -79,33 +82,42 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
               const SizedBox(height: 16),
               
-              Obx(() => AppTextField(
+              AppTextField(
                 controller: _passwordController,
                 label: 'Password',
                 hint: 'Enter your password',
                 prefixIcon: const Icon(LucideIcons.lock),
-                obscureText: !_controller.showPassword.value,
+                obscureText: !_showPassword,
                 suffixIcon: IconButton(
                   icon: Icon(
-                    _controller.showPassword.value 
+                    _showPassword 
                       ? LucideIcons.eyeOff 
                       : LucideIcons.eye,
                     size: 20,
                   ),
-                  onPressed: () => _controller.showPassword.toggle(),
+                  onPressed: () => setState(() => _showPassword = !_showPassword),
                 ),
                 textInputAction: TextInputAction.next,
-              )),
+              ),
               const SizedBox(height: 16),
               
-              Obx(() => AppTextField(
+              AppTextField(
                 controller: _confirmPasswordController,
                 label: 'Confirm Password',
                 hint: 'Re-enter your password',
                 prefixIcon: const Icon(LucideIcons.lock),
-                obscureText: !_controller.showPassword.value,
+                obscureText: !_showConfirmPassword,
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    _showConfirmPassword 
+                      ? LucideIcons.eyeOff 
+                      : LucideIcons.eye,
+                    size: 20,
+                  ),
+                  onPressed: () => setState(() => _showConfirmPassword = !_showConfirmPassword),
+                ),
                 textInputAction: TextInputAction.done,
-              )),
+              ),
               const SizedBox(height: 20),
               
               Row(
@@ -199,7 +211,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       text: 'Google',
                       icon: LucideIcons.globe,
                       type: AppButtonType.outline,
-                      onPressed: () => _controller.loginWithGoogle(),
+                      onPressed: () {
+                  Get.snackbar(
+                    'Google Sign In',
+                    'Coming soon',
+                    snackPosition: SnackPosition.BOTTOM,
+                  );
+                },
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -208,7 +226,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       text: 'Apple',
                       icon: LucideIcons.apple,
                       type: AppButtonType.outline,
-                      onPressed: () => _controller.loginWithApple(),
+                      onPressed: () {
+                        Get.snackbar(
+                          'Apple Sign In',
+                          'Coming soon',
+                          snackPosition: SnackPosition.BOTTOM,
+                        );
+                      },
                     ),
                   ),
                 ],
@@ -257,10 +281,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
       return;
     }
     
-    _controller.register(
-      name: _nameController.text.trim(),
-      email: _emailController.text.trim(),
-      password: _passwordController.text,
+    // For now, show coming soon message since register method doesn't exist
+    Get.snackbar(
+      'Registration',
+      'Registration will be available soon. Please use OTP login.',
+      snackPosition: SnackPosition.BOTTOM,
     );
+    
+    // Navigate to OTP login
+    Get.offNamed('/otp-login');
   }
 }

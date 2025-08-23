@@ -88,12 +88,11 @@ class _SplashScreenState extends State<SplashScreen>
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       // AssetWorks Logo
-                      Container(
-                        width: 200,
-                        height: 120,
-                        padding: const EdgeInsets.all(20),
+                      SizedBox(
+                        width: 180,
+                        height: 100,
                         child: SvgPicture.asset(
-                          'assets/assetworks_logo_full_black.svg',
+                          'assets/assetworks_logo_black.svg',
                           colorFilter: ColorFilter.mode(
                             isDark ? Colors.white : AppColors.primary,
                             BlendMode.srcIn,

@@ -2,6 +2,7 @@ class UserModel {
   final String id;
   final String username;
   final String email;
+  final String? fullName;
   final String? profilePicture;
   final String? bio;
   final int widgetCount;
@@ -15,6 +16,7 @@ class UserModel {
     required this.id,
     required this.username,
     required this.email,
+    this.fullName,
     this.profilePicture,
     this.bio,
     required this.widgetCount,
@@ -26,22 +28,31 @@ class UserModel {
   });
   
   factory UserModel.fromJson(Map<String, dynamic> json) {
+    // Use full_name if username is empty
+    String usernameValue = json['username'] ?? '';
+    if (usernameValue.isEmpty && json['full_name'] != null) {
+      usernameValue = json['full_name'];
+    }
+    
     return UserModel(
       id: json['id'] ?? '',
-      username: json['username'] ?? '',
+      username: usernameValue,
       email: json['email'] ?? '',
-      profilePicture: json['profile_picture'] ?? json['profilePicture'],
+      fullName: json['full_name'],
+      profilePicture: json['picture'] ?? json['profile_picture'] ?? json['profilePicture'],
       bio: json['bio'],
-      widgetCount: json['widget_count'] ?? json['widgetCount'] ?? 0,
-      followersCount: json['followers_count'] ?? json['followersCount'] ?? 0,
-      followingCount: json['following_count'] ?? json['followingCount'] ?? 0,
+      widgetCount: json['widgets_count'] ?? json['widget_count'] ?? json['widgetCount'] ?? 0,
+      followersCount: json['followers'] ?? json['followers_count'] ?? json['followersCount'] ?? 0,
+      followingCount: json['followings'] ?? json['following_count'] ?? json['followingCount'] ?? 0,
       isVerified: json['is_verified'] ?? json['isVerified'] ?? false,
       isPremium: json['is_premium'] ?? json['isPremium'] ?? false,
       joinedAt: json['joined_at'] != null
           ? DateTime.parse(json['joined_at'])
           : json['joinedAt'] != null
               ? DateTime.parse(json['joinedAt'])
-              : DateTime.now(),
+              : json['created_at'] != null
+                  ? DateTime.fromMillisecondsSinceEpoch(json['created_at'])
+                  : DateTime.now(),
     );
   }
   
@@ -50,6 +61,7 @@ class UserModel {
       'id': id,
       'username': username,
       'email': email,
+      'full_name': fullName,
       'profile_picture': profilePicture,
       'bio': bio,
       'widget_count': widgetCount,
@@ -65,6 +77,7 @@ class UserModel {
     String? id,
     String? username,
     String? email,
+    String? fullName,
     String? profilePicture,
     String? bio,
     int? widgetCount,
@@ -78,6 +91,7 @@ class UserModel {
       id: id ?? this.id,
       username: username ?? this.username,
       email: email ?? this.email,
+      fullName: fullName ?? this.fullName,
       profilePicture: profilePicture ?? this.profilePicture,
       bio: bio ?? this.bio,
       widgetCount: widgetCount ?? this.widgetCount,
