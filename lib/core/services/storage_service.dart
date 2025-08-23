@@ -97,6 +97,14 @@ class StorageService extends GetxService {
     return _box.read(ApiConstants.keyBiometricEnabled) ?? false;
   }
   
+  Future<void> setBiometricEnabled(bool enabled) async {
+    await saveBiometricEnabled(enabled);
+  }
+  
+  Future<bool?> getBiometricEnabledAsync() async {
+    return getBiometricEnabled();
+  }
+  
   Future<void> saveNotificationSettings(Map<String, dynamic> settings) async {
     await _box.write(ApiConstants.keyNotificationSettings, jsonEncode(settings));
   }
@@ -240,5 +248,25 @@ class StorageService extends GetxService {
   Future<void> clearAll() async {
     await _box.erase();
     await _secureStorage.deleteAll();
+  }
+  
+  // ============== Biometric Credentials ==============
+  
+  Future<void> saveCredentials(String email, String password) async {
+    await _secureStorage.write(key: 'biometric_email', value: email);
+    await _secureStorage.write(key: 'biometric_password', value: password);
+  }
+  
+  Future<String?> getStoredEmail() async {
+    return await _secureStorage.read(key: 'biometric_email');
+  }
+  
+  Future<String?> getStoredPassword() async {
+    return await _secureStorage.read(key: 'biometric_password');
+  }
+  
+  Future<void> clearCredentials() async {
+    await _secureStorage.delete(key: 'biometric_email');
+    await _secureStorage.delete(key: 'biometric_password');
   }
 }

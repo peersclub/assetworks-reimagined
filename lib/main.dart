@@ -8,6 +8,9 @@ import 'core/theme/theme_controller.dart';
 import 'core/bindings/initial_binding.dart';
 import 'presentation/pages/splash/splash_screen.dart';
 import 'presentation/pages/auth/login_screen.dart';
+import 'presentation/pages/auth/login_with_biometric_screen.dart';
+import 'presentation/pages/auth/register_screen.dart';
+import 'presentation/pages/auth/forgot_password_screen.dart';
 import 'presentation/pages/auth/otp_login_screen.dart';
 import 'presentation/pages/auth/otp_screen.dart';
 // Register and forgot password screens removed - using OTP only
@@ -24,6 +27,7 @@ import 'presentation/pages/widgets/widget_remix_screen.dart';
 import 'presentation/pages/widgets/remix_approach_screen.dart';
 import 'presentation/pages/widgets/widget_share_screen.dart';
 import 'presentation/pages/profile/user_profile_screen.dart';
+import 'presentation/pages/profile/enhanced_profile_screen.dart';
 import 'presentation/pages/profile/followers_screen.dart';
 import 'presentation/pages/playground/code_playground_screen.dart';
 
@@ -74,7 +78,10 @@ class AssetWorksApp extends StatelessWidget {
         GetPage(name: '/', page: () => const MainScreen()),
         GetPage(name: '/splash', page: () => const SplashScreen()),
         GetPage(name: '/onboarding', page: () => const OnboardingScreen()),
-        GetPage(name: '/login', page: () => const OtpLoginScreen()),
+        GetPage(name: '/login', page: () => const LoginWithBiometricScreen()),
+        GetPage(name: '/otp-login', page: () => const OtpLoginScreen()),
+        GetPage(name: '/register', page: () => const RegisterScreen()),
+        GetPage(name: '/forgot-password', page: () => const ForgotPasswordScreen()),
         GetPage(name: '/otp-verify', page: () => const OtpScreen()),
         GetPage(name: '/landing-screen', page: () => const OtpLoginScreen()),
         // Register and forgot password routes removed - using OTP only
@@ -91,7 +98,7 @@ class AssetWorksApp extends StatelessWidget {
         GetPage(name: '/remix-approach', page: () => const RemixApproachScreen()),
         GetPage(name: '/widget-share', page: () => const WidgetShareScreen()),
         GetPage(name: '/user-profile', page: () => const UserProfileScreen()),
-        GetPage(name: '/profile', page: () => const UserProfileScreen()),
+        GetPage(name: '/profile', page: () => const EnhancedProfileScreen()),
         GetPage(name: '/followers', page: () => const FollowersScreen()),
         GetPage(name: '/following', page: () => const FollowersScreen()),
         GetPage(name: '/code-playground', page: () => const CodePlaygroundScreen()),

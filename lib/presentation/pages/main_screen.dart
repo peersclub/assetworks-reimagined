@@ -6,7 +6,7 @@ import 'home/home_screen.dart';
 import 'dashboard/dashboard_screen.dart';
 import 'analyse/analyse_screen.dart';
 import 'notifications/notifications_screen.dart';
-import 'profile/profile_screen.dart';
+import 'profile/enhanced_profile_screen.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({Key? key}) : super(key: key);
@@ -23,7 +23,7 @@ class _MainScreenState extends State<MainScreen> {
     const DashboardScreen(),
     const AnalyseScreen(),
     const NotificationsScreen(),
-    const ProfileScreen(),
+    const EnhancedProfileScreen(),
   ];
 
   @override
