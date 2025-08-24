@@ -50,9 +50,9 @@ void main() async {
   }
   
   // Initialize GetX services
-  Get.put(StorageService());
-  Get.put(ApiClient());
-  Get.put(ApiService());
+  Get.lazyPut(() => StorageService());
+  Get.lazyPut(() => ApiClient());
+  Get.lazyPut(() => ApiService());
   
   // Set preferred orientations
   await SystemChrome.setPreferredOrientations([
@@ -61,10 +61,12 @@ void main() async {
     DeviceOrientation.landscapeRight,
   ]);
   
-  // Initialize iOS 18 services
-  DynamicIslandService().initialize();
-  HomeWidgetService().initialize();
-  PerformanceOptimizationService().initialize();
+  // Initialize iOS 18 services (delayed to avoid crashes)
+  Future.delayed(Duration(seconds: 1), () {
+    DynamicIslandService().initialize();
+    HomeWidgetService().initialize();
+    PerformanceOptimizationService().initialize();
+  });
   
   // Set iOS system UI
   SystemChrome.setSystemUIOverlayStyle(

@@ -38,7 +38,9 @@ import UserNotifications
   
   private func setupPushNotifications(_ application: UIApplication) {
     // Initialize Firebase
-    FirebaseApp.configure()
+    if FirebaseApp.app() == nil {
+      FirebaseApp.configure()
+    }
     
     // Setup messaging delegate
     Messaging.messaging().delegate = self
