@@ -6,9 +6,10 @@ import '../widgets/widget_card_shimmer.dart';
 import '../services/dynamic_island_service.dart';
 import '../services/api_service.dart';
 import '../models/dashboard_widget.dart';
-import '../widgets/widget_card_v2.dart';
+import '../widgets/widget_card_final.dart';
 import '../screens/widget_preview_screen.dart';
 import '../screens/widget_remix_screen.dart';
+import '../screens/pro_analytics_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({Key? key}) : super(key: key);
@@ -303,6 +304,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
               children: [
                 CupertinoButton(
                   padding: EdgeInsets.zero,
+                  child: const Icon(CupertinoIcons.chart_bar_alt_fill),
+                  onPressed: () {
+                    Get.to(() => const ProAnalyticsScreen(),
+                      transition: Transition.cupertino,
+                    );
+                  },
+                ),
+                CupertinoButton(
+                  padding: EdgeInsets.zero,
                   child: const Icon(CupertinoIcons.line_horizontal_3_decrease),
                   onPressed: _showFilterOptions,
                 ),
@@ -445,14 +455,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 delegate: SliverChildBuilderDelegate(
                   (context, index) {
                     if (index < _widgets.length) {
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 16),
-                        child: WidgetCardV2(
-                          widget: _widgets[index],
-                          onAction: (action) => _handleWidgetAction(
-                            _widgets[index],
-                            action,
-                          ),
+                      return WidgetCardFinal(
+                        widget: _widgets[index],
+                        onAction: (action) => _handleWidgetAction(
+                          _widgets[index],
+                          action,
                         ),
                       );
                     } else if (_isLoading) {

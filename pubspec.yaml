@@ -43,6 +43,9 @@ dependencies:
   # iOS Style Charts
   fl_chart: ^0.66.0
   
+  # Biometric Authentication
+  local_auth: ^2.2.0
+  
   # Storage
   get_storage: ^2.1.1
   shared_preferences: ^2.2.2
@@ -57,7 +60,6 @@ dependencies:
   
   # Authentication
   google_sign_in: ^6.2.1
-  local_auth: ^2.2.0
   sign_in_with_apple: ^6.1.0
   crypto: ^3.0.3
   

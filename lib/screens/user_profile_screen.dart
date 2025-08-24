@@ -40,14 +40,14 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
     setState(() => _isLoading = true);
     
     try {
-      // Load user profile
-      final profile = await _apiService.fetchUserProfile();
+      // Load user profile from API
+      final profile = await _apiService.fetchUserProfile(widget.userId);
       
-      // Load user's widgets
-      final widgets = await _apiService.fetchUserWidgets(
-        userId: widget.userId,
+      // Load user's widgets - using general fetch with filters
+      final widgets = await _apiService.fetchDashboardWidgets(
         page: 1,
         limit: 50,
+        filters: {'user_id': widget.userId},
       );
       
       if (mounted) {
@@ -281,13 +281,13 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                           _buildInfoRow(
                             CupertinoIcons.location,
                             'Location',
-                            _userProfile?.location ?? 'Not specified',
+                            'Not specified',
                           ),
                           const SizedBox(height: 16),
                           _buildInfoRow(
                             CupertinoIcons.link,
                             'Website',
-                            _userProfile?.website ?? 'Not specified',
+                            'Not specified',
                           ),
                         ],
                       ),

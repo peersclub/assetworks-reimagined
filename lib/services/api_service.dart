@@ -581,6 +581,22 @@ class ApiService extends getx.GetxService {
     }
   }
   
+  Future<UserProfile> fetchUserProfile(String userId) async {
+    try {
+      final response = await _dio.get('/api/v1/users/$userId');
+      return UserProfile.fromJson(response.data['user'] ?? response.data);
+    } catch (e) {
+      print('Error fetching user profile: $e');
+      // Return basic profile with available data
+      return UserProfile(
+        id: userId,
+        username: 'User',
+        followers_count: 0,
+        following_count: 0,
+      );
+    }
+  }
+  
   Future<bool> followWidget(String widgetId) async {
     try {
       final response = await _dio.post('/api/v1/widgets/$widgetId/follow');
@@ -624,6 +640,183 @@ class ApiService extends getx.GetxService {
     } catch (e) {
       print('Error deleting widgets: $e');
       return false;
+    }
+  }
+  
+  // Registration APIs
+  Future<Map<String, dynamic>> register(Map<String, dynamic> data) async {
+    try {
+      final response = await _dio.post('/api/v1/auth/register', data: data);
+      
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return {
+          'success': true,
+          'user': response.data['user'] ?? {},
+          'user_id': response.data['user']?['id'] ?? response.data['user_id'],
+          'token': response.data['token'],
+          'requires_verification': response.data['requires_verification'] ?? false,
+          'message': response.data['message'] ?? 'Registration successful',
+        };
+      }
+      
+      return {
+        'success': false,
+        'message': response.data['message'] ?? 'Registration failed',
+      };
+    } catch (e) {
+      print('Registration error: $e');
+      return {
+        'success': false,
+        'message': 'An error occurred during registration',
+      };
+    }
+  }
+  
+  Future<bool> checkUsernameAvailability(String username) async {
+    try {
+      final response = await _dio.get(
+        '/api/v1/auth/check-username',
+        queryParameters: {'username': username},
+      );
+      
+      return response.data['available'] ?? false;
+    } catch (e) {
+      print('Username check error: $e');
+      return false;
+    }
+  }
+  
+  Future<bool> uploadProfilePicture(File image, {String? userId}) async {
+    try {
+      final formData = FormData.fromMap({
+        'image': await MultipartFile.fromFile(
+          image.path,
+          filename: 'profile_${DateTime.now().millisecondsSinceEpoch}.jpg',
+        ),
+        if (userId != null) 'user_id': userId,
+      });
+      
+      final response = await _dio.post(
+        '/api/v1/user/profile/picture',
+        data: formData,
+      );
+      
+      return response.statusCode == 200;
+    } catch (e) {
+      print('Profile picture upload error: $e');
+      return false;
+    }
+  }
+  
+  // Settings APIs
+  Future<Map<String, dynamic>> getUserSettings() async {
+    try {
+      final response = await _dio.get('/api/v1/user/settings');
+      
+      if (response.statusCode == 200) {
+        return response.data['settings'] ?? response.data ?? {};
+      }
+      return {};
+    } catch (e) {
+      print('Error fetching user settings: $e');
+      return {};
+    }
+  }
+  
+  Future<bool> updateUserSettings(Map<String, dynamic> settings) async {
+    try {
+      final response = await _dio.put(
+        '/api/v1/user/settings',
+        data: settings,
+      );
+      return response.statusCode == 200;
+    } catch (e) {
+      print('Error updating user settings: $e');
+      return false;
+    }
+  }
+  
+  Future<bool> deleteAccount() async {
+    try {
+      final response = await _dio.delete('/api/v1/user/account');
+      return response.statusCode == 200;
+    } catch (e) {
+      print('Error deleting account: $e');
+      return false;
+    }
+  }
+  
+  // Activity & History APIs
+  Future<List<Map<String, dynamic>>> fetchUserActivity({
+    int page = 1,
+    int limit = 20,
+    String? filter,
+  }) async {
+    try {
+      final response = await _dio.get(
+        '/api/v1/user/activity',
+        queryParameters: {
+          'page': page,
+          'limit': limit,
+          if (filter != null) 'filter': filter,
+        },
+      );
+      
+      if (response.statusCode == 200) {
+        final data = response.data['activities'] ?? response.data['data'] ?? [];
+        return List<Map<String, dynamic>>.from(data);
+      }
+      return [];
+    } catch (e) {
+      print('Error fetching user activity: $e');
+      return [];
+    }
+  }
+  
+  Future<bool> trackActivity({
+    required String action,
+    required String widgetId,
+    Map<String, dynamic>? metadata,
+  }) async {
+    try {
+      final response = await _dio.post(
+        '/api/v1/user/activity',
+        data: {
+          'action': action,
+          'widget_id': widgetId,
+          'timestamp': DateTime.now().toIso8601String(),
+          if (metadata != null) 'metadata': metadata,
+        },
+      );
+      return response.statusCode == 200;
+    } catch (e) {
+      print('Error tracking activity: $e');
+      return false;
+    }
+  }
+  
+  // AI Chat API
+  Future<String?> sendAIMessage(String message, {String? context}) async {
+    try {
+      final response = await _dio.post(
+        '/api/v1/ai/chat',
+        data: {
+          'message': message,
+          'context': context ?? 'general',
+        },
+        options: Options(
+          receiveTimeout: Duration(seconds: 30),
+        ),
+      );
+      
+      if (response.statusCode == 200) {
+        return response.data['response'] ?? response.data['message'];
+      }
+      return null;
+    } catch (e) {
+      print('Error sending AI message: $e');
+      // Return null to trigger fallback
+      return null;
     }
   }
   
@@ -1004,6 +1197,43 @@ class ApiService extends getx.GetxService {
       return response.statusCode == 200;
     } catch (e) {
       print('Clear prompt history error: $e');
+      return false;
+    }
+  }
+  
+  // Onboarding APIs
+  Future<Map<String, dynamic>> saveOnboardingData(Map<String, dynamic> data) async {
+    try {
+      final response = await _dio.post(
+        '/api/v1/user/onboarding',
+        data: data,
+      );
+      return response.data ?? {'success': true};
+    } catch (e) {
+      print('Error saving onboarding data: $e');
+      return {'success': false, 'message': 'Failed to save preferences'};
+    }
+  }
+  
+  Future<Map<String, dynamic>> getOnboardingStatus() async {
+    try {
+      final response = await _dio.get('/api/v1/user/onboarding/status');
+      return response.data ?? {};
+    } catch (e) {
+      print('Error getting onboarding status: $e');
+      return {'completed': false};
+    }
+  }
+  
+  Future<bool> updateUserPreferences(Map<String, dynamic> preferences) async {
+    try {
+      final response = await _dio.put(
+        '/api/v1/user/preferences',
+        data: preferences,
+      );
+      return response.statusCode == 200;
+    } catch (e) {
+      print('Error updating preferences: $e');
       return false;
     }
   }

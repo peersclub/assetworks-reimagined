@@ -173,10 +173,7 @@ class _WidgetCreationScreenState extends State<WidgetCreationScreen> {
     );
     
     try {
-      final result = await _apiService.createWidgetFromPrompt(
-        prompt,
-        title: title.isEmpty ? null : title,
-      );
+      final result = await _apiService.createWidgetFromPrompt(prompt);
       
       if (result['success'] == true && result['widget'] != null) {
         DynamicIslandService().endLiveActivity('widget_creation');

@@ -3,10 +3,11 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'dashboard_screen.dart';
 import 'dashboard_v2_screen.dart';
-import 'trending_screen.dart';
+import 'explore_screen.dart';
 import 'create_widget_screen.dart';
 import 'notifications_screen.dart';
 import 'profile_screen.dart';
+import 'ai_assistant_screen.dart';
 import '../services/performance_optimization_service.dart';
 import '../services/dynamic_island_service.dart';
 
@@ -23,7 +24,7 @@ class _MainScreenState extends State<MainScreen> {
   
   final List<Widget> _screens = [
     const DashboardScreen(),
-    const TrendingScreen(),
+    const ExploreScreen(),
     const CreateWidgetScreen(),
     const NotificationsScreen(),
     const ProfileScreen(),
@@ -98,7 +99,9 @@ class _MainScreenState extends State<MainScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return CupertinoTabScaffold(
+    return Stack(
+      children: [
+        CupertinoTabScaffold(
       backgroundColor: CupertinoTheme.of(context).scaffoldBackgroundColor,
       tabBar: CupertinoTabBar(
         currentIndex: _currentIndex,
@@ -126,9 +129,9 @@ class _MainScreenState extends State<MainScreen> {
             label: 'Dashboard',
           ),
           const BottomNavigationBarItem(
-            icon: Icon(CupertinoIcons.flame),
-            activeIcon: Icon(CupertinoIcons.flame_fill),
-            label: 'Trending',
+            icon: Icon(CupertinoIcons.compass),
+            activeIcon: Icon(CupertinoIcons.compass_fill),
+            label: 'Explore',
           ),
           BottomNavigationBarItem(
             icon: Container(
@@ -230,6 +233,48 @@ class _MainScreenState extends State<MainScreen> {
           builder: (context) => _screens[index],
         );
       },
+    ),
+        // Floating AI Assistant Button
+        Positioned(
+          bottom: 100,
+          right: 20,
+          child: GestureDetector(
+            onTap: () {
+              HapticFeedback.heavyImpact();
+              Get.to(() => const AIAssistantScreen(),
+                transition: Transition.cupertino,
+              );
+            },
+            child: Container(
+              width: 60,
+              height: 60,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    Color(0xFF6366F1),
+                    Color(0xFF8B5CF6),
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: Color(0xFF6366F1).withOpacity(0.4),
+                    blurRadius: 20,
+                    offset: Offset(0, 10),
+                  ),
+                ],
+              ),
+              child: Icon(
+                CupertinoIcons.sparkles,
+                color: CupertinoColors.white,
+                size: 28,
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

@@ -29,6 +29,22 @@ class _WidgetPreviewScreenState extends State<WidgetPreviewScreen> {
     super.initState();
     dashboardWidget = Get.arguments as DashboardWidget;
     _initWebView();
+    _trackView();
+  }
+  
+  Future<void> _trackView() async {
+    // Track widget view activity
+    final ApiService apiService = Get.find<ApiService>();
+    if (dashboardWidget.id != null) {
+      await apiService.trackActivity(
+        action: 'viewed',
+        widgetId: dashboardWidget.id!,
+        metadata: {
+          'source': 'widget_preview',
+          'timestamp': DateTime.now().toIso8601String(),
+        },
+      );
+    }
   }
   
   void _initWebView() {

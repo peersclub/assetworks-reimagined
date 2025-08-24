@@ -9,6 +9,7 @@ import '../services/dynamic_island_service.dart';
 import '../models/dashboard_widget.dart';
 import '../models/user_profile.dart';
 import '../widgets/widget_card.dart';
+import 'history_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({Key? key}) : super(key: key);
@@ -388,16 +389,53 @@ class _ProfileScreenState extends State<ProfileScreen>
                         
                         const SizedBox(height: 16),
                         
-                        // Edit Profile Button
-                        CupertinoButton(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 32,
-                            vertical: 8,
-                          ),
-                          color: CupertinoColors.systemIndigo,
-                          borderRadius: BorderRadius.circular(20),
-                          onPressed: _showEditProfile,
-                          child: const Text('Edit Profile'),
+                        // Action Buttons Row
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            // Edit Profile Button
+                            CupertinoButton(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 24,
+                                vertical: 8,
+                              ),
+                              color: CupertinoColors.systemIndigo,
+                              borderRadius: BorderRadius.circular(20),
+                              onPressed: _showEditProfile,
+                              child: const Text('Edit Profile'),
+                            ),
+                            const SizedBox(width: 12),
+                            // View Activity Button
+                            CupertinoButton(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 24,
+                                vertical: 8,
+                              ),
+                              color: CupertinoColors.systemGrey5,
+                              borderRadius: BorderRadius.circular(20),
+                              onPressed: () {
+                                Get.to(() => const HistoryScreen(),
+                                  transition: Transition.cupertino,
+                                );
+                              },
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    CupertinoIcons.clock_fill,
+                                    size: 16,
+                                    color: CupertinoColors.label,
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    'Activity',
+                                    style: TextStyle(
+                                      color: CupertinoColors.label,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),

@@ -135,6 +135,28 @@ class StorageService extends GetxService {
     return _box.read(ApiConstants.keyFirstLaunch) ?? true;
   }
   
+  // ============== Onboarding Storage ==============
+  
+  Future<void> saveOnboardingComplete(bool completed) async {
+    await _box.write('onboarding_completed', completed);
+  }
+  
+  bool isOnboardingComplete() {
+    return _box.read('onboarding_completed') ?? false;
+  }
+  
+  Future<void> saveUserPreferences(Map<String, dynamic> preferences) async {
+    await _box.write('user_preferences', jsonEncode(preferences));
+  }
+  
+  Map<String, dynamic> getUserPreferences() {
+    final prefsString = _box.read('user_preferences');
+    if (prefsString != null) {
+      return jsonDecode(prefsString);
+    }
+    return {};
+  }
+  
   // ============== Cache Storage ==============
   
   Future<void> saveCache(String key, dynamic data, {Duration? validFor}) async {
