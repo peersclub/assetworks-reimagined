@@ -1,6 +1,6 @@
 import 'package:get/get.dart';
 import 'dart:io';
-import '../../data/services/api_service.dart';
+import '../../services/api_service.dart';
 import '../../core/utils/storage_helper.dart';
 
 enum WidgetType {

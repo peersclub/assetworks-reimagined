@@ -15,7 +15,7 @@ import 'services/keyboard_navigation_service.dart';
 import 'services/dynamic_type_service.dart';
 
 // AssetWorks API and Services
-import 'data/services/api_service.dart';
+import 'services/api_service.dart';
 import 'core/services/storage_service.dart';
 import 'core/network/api_client.dart';
 

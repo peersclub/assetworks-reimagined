@@ -1,6 +1,6 @@
 import 'package:get/get.dart';
 import 'package:local_auth/local_auth.dart';
-import '../../data/services/api_service.dart';
+import '../../services/api_service.dart';
 import '../../core/services/storage_service.dart';
 import '../../data/models/user_model.dart';
 import '../../core/utils/biometric_auth.dart';

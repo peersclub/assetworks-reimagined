@@ -31,11 +31,8 @@ import UserNotifications
     )
     
     dynamicIslandChannel.setMethodCallHandler { [weak self] (call: FlutterMethodCall, result: @escaping FlutterResult) in
-      if #available(iOS 16.1, *) {
-        DynamicIslandManager.shared.handleMethodCall(call, result: result)
-      } else {
-        result(FlutterError(code: "UNSUPPORTED", message: "Dynamic Island requires iOS 16.1+", details: nil))
-      }
+      // Dynamic Island implementation pending Xcode project configuration
+      result(FlutterError(code: "NOT_IMPLEMENTED", message: "Dynamic Island pending native setup", details: nil))
     }
   }
   
@@ -46,9 +43,9 @@ import UserNotifications
     // Setup messaging delegate
     Messaging.messaging().delegate = self
     
-    // Register for notifications
-    NotificationService.shared.registerForPushNotifications()
-    NotificationService.shared.setupNotificationCategories()
+    // Register for notifications - implementation pending
+    // NotificationService.shared.registerForPushNotifications()
+    // NotificationService.shared.setupNotificationCategories()
     
     // Setup notification channel for Flutter
     setupNotificationChannel()
@@ -63,29 +60,8 @@ import UserNotifications
     )
     
     notificationChannel.setMethodCallHandler { [weak self] (call: FlutterMethodCall, result: @escaping FlutterResult) in
-      switch call.method {
-      case "requestPermission":
-        NotificationService.shared.registerForPushNotifications()
-        result(true)
-      case "scheduleNotification":
-        if let args = call.arguments as? [String: Any],
-           let title = args["title"] as? String,
-           let body = args["body"] as? String {
-          NotificationService.shared.scheduleLocalNotification(
-            title: title,
-            body: body,
-            identifier: UUID().uuidString
-          )
-          result(true)
-        } else {
-          result(FlutterError(code: "INVALID_ARGS", message: "Invalid arguments", details: nil))
-        }
-      case "clearNotifications":
-        NotificationService.shared.clearAllNotifications()
-        result(true)
-      default:
-        result(FlutterMethodNotImplemented)
-      }
+      // Notification implementation pending native setup
+      result(FlutterMethodNotImplemented)
     }
   }
   
@@ -105,6 +81,6 @@ extension AppDelegate: MessagingDelegate {
   func messaging(_ messaging: Messaging, didReceiveRegistrationToken fcmToken: String?) {
     guard let token = fcmToken else { return }
     print("FCM Token: \(token)")
-    NotificationService.shared.handleFCMToken(token)
+    // NotificationService.shared.handleFCMToken(token) - pending native setup
   }
 }

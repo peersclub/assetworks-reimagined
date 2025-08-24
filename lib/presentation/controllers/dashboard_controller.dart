@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'dart:async';
-import '../../data/services/api_service.dart';
+import '../../services/api_service.dart';
 import '../../core/services/storage_service.dart';
 import '../../data/models/widget_model.dart';
 import '../../data/models/analysis_model.dart';
