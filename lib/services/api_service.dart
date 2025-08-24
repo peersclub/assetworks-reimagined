@@ -686,7 +686,7 @@ class ApiService extends getx.GetxService {
     }
   }
   
-  Future<bool> uploadProfilePicture(File image, {String? userId}) async {
+  Future<bool> uploadProfilePictureFile(File image, {String? userId}) async {
     try {
       final formData = FormData.fromMap({
         'image': await MultipartFile.fromFile(
@@ -736,15 +736,6 @@ class ApiService extends getx.GetxService {
     }
   }
   
-  Future<bool> deleteAccount() async {
-    try {
-      final response = await _dio.delete('/api/v1/user/account');
-      return response.statusCode == 200;
-    } catch (e) {
-      print('Error deleting account: $e');
-      return false;
-    }
-  }
   
   // Activity & History APIs
   Future<List<Map<String, dynamic>>> fetchUserActivity({
@@ -1198,6 +1189,46 @@ class ApiService extends getx.GetxService {
     } catch (e) {
       print('Clear prompt history error: $e');
       return false;
+    }
+  }
+  
+  // Widget Generation & Remix APIs
+  Future<Map<String, dynamic>> generateWidget(Map<String, dynamic> data) async {
+    try {
+      final response = await _dio.post(
+        '/api/v1/widgets/generate',
+        data: data,
+      );
+      return response.data ?? {'success': false};
+    } catch (e) {
+      print('Error generating widget: $e');
+      return {'success': false, 'message': 'Failed to generate widget'};
+    }
+  }
+  
+  Future<Map<String, dynamic>> remixWidget(Map<String, dynamic> data) async {
+    try {
+      final response = await _dio.post(
+        '/api/v1/widgets/remix',
+        data: data,
+      );
+      return response.data ?? {'success': false};
+    } catch (e) {
+      print('Error remixing widget: $e');
+      return {'success': false, 'message': 'Failed to remix widget'};
+    }
+  }
+  
+  Future<Map<String, dynamic>> modifyWidget(Map<String, dynamic> data) async {
+    try {
+      final response = await _dio.post(
+        '/api/v1/widgets/modify',
+        data: data,
+      );
+      return response.data ?? {'success': false};
+    } catch (e) {
+      print('Error modifying widget: $e');
+      return {'success': false, 'message': 'Failed to modify widget'};
     }
   }
   

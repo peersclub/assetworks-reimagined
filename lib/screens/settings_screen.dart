@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:local_auth/local_auth.dart';
 import '../services/api_service.dart';
-import '../services/storage_service.dart';
+import '../core/services/storage_service.dart';
 import '../services/dynamic_island_service.dart';
 import '../screens/login_screen.dart';
 
@@ -230,7 +230,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               }
               
               // Delete account via API
-              final success = await _apiService.deleteAccount();
+              final success = await _apiService.deleteUserAccount();
               if (success) {
                 await _storageService.clearAll();
                 Get.offAll(() => const LoginScreen());

@@ -2,7 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import '../services/api_service.dart';
-import '../services/storage_service.dart';
+import '../core/services/storage_service.dart';
 import '../services/dynamic_island_service.dart';
 import '../screens/main_screen.dart';
 

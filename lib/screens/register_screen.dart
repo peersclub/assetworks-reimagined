@@ -4,7 +4,7 @@ import 'package:get/get.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 import '../services/api_service.dart';
-import '../services/storage_service.dart';
+import '../core/services/storage_service.dart';
 import '../services/dynamic_island_service.dart';
 import '../screens/otp_verification_screen.dart';
 import '../screens/main_screen.dart';
@@ -213,7 +213,7 @@ class _RegisterScreenState extends State<RegisterScreen>
       if (response['success'] == true) {
         // Upload profile picture if selected
         if (_selectedImage != null && response['user_id'] != null) {
-          await _apiService.uploadProfilePicture(
+          await _apiService.uploadProfilePictureFile(
             _selectedImage!,
             userId: response['user_id'],
           );

@@ -116,13 +116,155 @@ class DynamicIslandService {
   }
   
   // End live activity
-  Future<void> endLiveActivity(String activityId) async {
+  Future<void> endLiveActivity([String? activityId]) async {
     try {
       await _channel.invokeMethod('endLiveActivity', {
-        'id': activityId,
+        'id': activityId ?? 'current',
       });
     } catch (e) {
       print('Failed to end live activity: $e');
+    }
+  }
+  
+  // Widget Creation Live Activity Methods
+  Future<void> startWidgetCreation({
+    required String prompt,
+    String? widgetType,
+  }) async {
+    try {
+      await _channel.invokeMethod('startWidgetCreation', {
+        'prompt': prompt,
+        'widgetType': widgetType ?? 'custom',
+        'timestamp': DateTime.now().millisecondsSinceEpoch,
+      });
+      
+      _isActive = true;
+      
+      // Update status
+      updateStatus(
+        'Creating widget...',
+        icon: CupertinoIcons.sparkles,
+      );
+    } catch (e) {
+      print('Failed to start widget creation live activity: $e');
+    }
+  }
+  
+  Future<void> updateWidgetCreationProgress({
+    required String stage,
+    required double progress,
+    String? detail,
+  }) async {
+    try {
+      await _channel.invokeMethod('updateWidgetCreation', {
+        'stage': stage,
+        'progress': progress,
+        'detail': detail,
+      });
+      
+      // Update local progress
+      _currentProgress = progress;
+      _progressController.add(progress);
+      
+      // Update status with stage
+      String statusMessage;
+      IconData statusIcon;
+      
+      switch (stage) {
+        case 'analyzing':
+          statusMessage = 'Analyzing your request...';
+          statusIcon = CupertinoIcons.waveform;
+          break;
+        case 'generating':
+          statusMessage = 'Generating widget...';
+          statusIcon = CupertinoIcons.sparkles;
+          break;
+        case 'optimizing':
+          statusMessage = 'Optimizing design...';
+          statusIcon = CupertinoIcons.paintbrush_fill;
+          break;
+        case 'finalizing':
+          statusMessage = 'Finalizing widget...';
+          statusIcon = CupertinoIcons.checkmark_circle;
+          break;
+        case 'complete':
+          statusMessage = 'Widget created!';
+          statusIcon = CupertinoIcons.checkmark_circle_fill;
+          break;
+        default:
+          statusMessage = detail ?? 'Processing...';
+          statusIcon = CupertinoIcons.gear;
+      }
+      
+      updateStatus(statusMessage, icon: statusIcon);
+    } catch (e) {
+      print('Failed to update widget creation progress: $e');
+    }
+  }
+  
+  Future<void> completeWidgetCreation({
+    required String widgetTitle,
+    required bool success,
+    String? errorMessage,
+  }) async {
+    try {
+      await _channel.invokeMethod('completeWidgetCreation', {
+        'widgetTitle': widgetTitle,
+        'success': success,
+        'errorMessage': errorMessage,
+      });
+      
+      // Show completion notification
+      if (success) {
+        showNotification(
+          'Widget Created!',
+          widgetTitle,
+          icon: CupertinoIcons.checkmark_circle_fill,
+        );
+        
+        updateStatus(
+          'Widget "$widgetTitle" created successfully',
+          icon: CupertinoIcons.checkmark_circle_fill,
+        );
+      } else {
+        showNotification(
+          'Creation Failed',
+          errorMessage ?? 'Unable to create widget',
+          icon: CupertinoIcons.xmark_circle_fill,
+        );
+        
+        updateStatus(
+          'Widget creation failed',
+          icon: CupertinoIcons.xmark_circle_fill,
+        );
+      }
+      
+      // Clear progress after delay
+      Future.delayed(Duration(seconds: 3), () {
+        endLiveActivity();
+      });
+    } catch (e) {
+      print('Failed to complete widget creation: $e');
+    }
+  }
+  
+  Future<void> startWidgetRemix({
+    required String originalTitle,
+    required String modifications,
+  }) async {
+    try {
+      await _channel.invokeMethod('startWidgetRemix', {
+        'originalTitle': originalTitle,
+        'modifications': modifications,
+        'timestamp': DateTime.now().millisecondsSinceEpoch,
+      });
+      
+      updateStatus(
+        'Remixing "$originalTitle"...',
+        icon: CupertinoIcons.arrow_2_circlepath,
+      );
+    } catch (e) {
+      print('Failed to start widget remix live activity: $e');
     }
   }
   
