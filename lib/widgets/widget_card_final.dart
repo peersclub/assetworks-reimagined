@@ -5,7 +5,7 @@ import '../models/dashboard_widget.dart';
 import '../services/api_service.dart';
 import '../services/dynamic_island_service.dart';
 import '../screens/user_profile_screen.dart';
-import '../screens/widget_remix_screen.dart';
+import '../screens/widget_creator_screen.dart';
 
 class WidgetCardFinal extends StatefulWidget {
   final DashboardWidget widget;

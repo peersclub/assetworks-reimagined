@@ -8,7 +8,7 @@ import '../services/api_service.dart';
 import '../models/dashboard_widget.dart';
 import '../widgets/widget_card_final.dart';
 import '../screens/widget_preview_screen.dart';
-import '../screens/ai_widget_creator_screen.dart';
+import '../screens/widget_creator_screen.dart';
 import '../screens/pro_analytics_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -241,8 +241,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
         break;
         
       case 'remix':
-        Get.to(() => AIWidgetCreatorScreen(
-          remixWidget: widget,
+        Get.to(() => WidgetCreatorScreen(
+          templateWidget: widget,
+          isRemixMode: true,
         ), 
           transition: Transition.cupertino,
         );

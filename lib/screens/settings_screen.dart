@@ -6,6 +6,7 @@ import 'package:local_auth/local_auth.dart';
 import '../services/api_service.dart';
 import '../core/services/storage_service.dart';
 import '../services/dynamic_island_service.dart';
+import '../controllers/theme_controller.dart';
 import '../screens/login_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -329,8 +330,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           onChanged: (value) {
                             setState(() => _darkMode = value);
                             _updateSetting('dark_mode', value);
-                            // Apply theme change
-                            Get.changeThemeMode(value ? ThemeMode.dark : ThemeMode.light);
+                            // Apply theme change using ThemeController
+                            final themeController = Get.find<ThemeController>();
+                            themeController.setThemeMode(
+                              value ? ThemeMode.dark : ThemeMode.light
+                            );
                           },
                         ),
                       ),

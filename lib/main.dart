@@ -7,6 +7,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 // iOS 18 Theme and Services
 import 'core/theme/ios_theme.dart';
+import 'controllers/theme_controller.dart';
 import 'services/dynamic_island_service.dart';
 import 'core/services/home_widget_service.dart';
 import 'services/accessibility_service.dart';
@@ -54,6 +55,9 @@ void main() async {
   Get.lazyPut(() => ApiClient());
   Get.lazyPut(() => ApiService());
   
+  // Initialize Theme Controller
+  Get.put(ThemeController());
+  
   // Register iOS 18 services with GetX
   Get.lazyPut(() => PerformanceOptimizationService());
   Get.lazyPut(() => AccessibilityService());
@@ -90,11 +94,13 @@ class AssetWorksReimagined extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GetCupertinoApp(
+    final ThemeController themeController = Get.find<ThemeController>();
+    
+    return Obx(() => GetCupertinoApp(
       title: 'AssetWorks Reimagined',
       debugShowCheckedModeBanner: false,
-      theme: iOS18Theme.lightTheme,
-      // Dark theme will be handled by the IOSThemeSystem
+      theme: themeController.currentTheme,
+      // Theme changes dynamically based on user selection
       localizationsDelegates: const [
         DefaultCupertinoLocalizations.delegate,
         DefaultWidgetsLocalizations.delegate,
@@ -183,7 +189,7 @@ class AssetWorksReimagined extends StatelessWidget {
           ),
         );
       },
-    );
+    ));
   }
 }
 
