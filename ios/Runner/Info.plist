@@ -75,6 +75,13 @@
 		<string>processing</string>
 		<string>remote-notification</string>
 	</array>
+	<key>BGTaskSchedulerPermittedIdentifiers</key>
+	<array>
+		<string>ai.assetworks.mobile.refresh</string>
+		<string>ai.assetworks.mobile.widgetupdate</string>
+		<string>ai.assetworks.mobile.datasync</string>
+		<string>ai.assetworks.mobile.cleanup</string>
+	</array>
 	<key>UIRequiredDeviceCapabilities</key>
 	<array>
 		<string>arm64</string>
