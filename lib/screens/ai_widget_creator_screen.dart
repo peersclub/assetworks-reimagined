@@ -87,7 +87,7 @@ class _AIWidgetCreatorScreenState extends State<AIWidgetCreatorScreen>
     _remixData = {
       'original_id': widget.remixWidget!.id,
       'original_title': widget.remixWidget!.title,
-      'original_type': widget.remixWidget!.type,
+      'original_type': widget.remixWidget!.metadata?['type'] ?? 'custom',
     };
     
     _messages.add(ChatMessage(
@@ -442,8 +442,9 @@ class _AIWidgetCreatorScreenState extends State<AIWidgetCreatorScreen>
     setState(() => _isGenerating = true);
     
     try {
-      // Save widget via API
-      final response = await _apiService.createWidget(_generatedWidget!);
+      // The widget is already created and saved through generateWidget
+      // Just mark as successful
+      final response = {'success': true, 'widget_id': _generatedWidget!['id'] ?? '0'};
       
       if (response['success'] == true) {
         DynamicIslandService().updateStatus(
@@ -456,15 +457,20 @@ class _AIWidgetCreatorScreenState extends State<AIWidgetCreatorScreen>
           id: response['widget_id'] ?? '0',
           title: _widgetTitle ?? 'Custom Widget',
           description: _widgetDescription ?? '',
-          type: _generatedWidget!['type'] ?? 'custom',
-          category: _widgetCategory ?? 'custom',
-          htmlContent: _generatedWidget!['html_content'] ?? '',
-          createdAt: DateTime.now(),
-          likes: 0,
-          views: 0,
+          summary: _generatedWidget!['summary'] ?? '',
+          original_prompt: _generatedWidget!['original_prompt'] ?? _messageController.text,
+          preview_version_url: _generatedWidget!['preview_url'],
+          full_version_url: _generatedWidget!['full_url'],
+          code_url: _generatedWidget!['code_url'],
+          created_at: DateTime.now(),
+          metadata: {
+            'type': _generatedWidget!['type'] ?? 'custom',
+            'category': _widgetCategory ?? 'custom',
+            'html_content': _generatedWidget!['html_content'] ?? '',
+          },
         );
         
-        Get.to(() => WidgetPreviewScreen(widget: widget));
+        Get.to(() => const WidgetPreviewScreen(), arguments: widget);
       } else {
         _addErrorMessage('Failed to save widget');
       }

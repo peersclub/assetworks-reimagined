@@ -1045,6 +1045,16 @@ class ApiService extends getx.GetxService {
     }
   }
   
+  Future<bool> logout() async {
+    return signOut();
+  }
+  
+  Future<Map<String, dynamic>> login({required String email, required String password}) async {
+    // This app uses OTP-based authentication
+    // For compatibility, we'll treat password as OTP
+    return await verifyOTP(email, password);
+  }
+  
   // Onboarding Data API
   Future<Map<String, dynamic>?> fetchOnboardingData() async {
     try {

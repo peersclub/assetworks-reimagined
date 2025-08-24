@@ -45,10 +45,33 @@ class StorageService extends GetxService {
     return null;
   }
   
+  String? getUserEmail() {
+    final user = getUser();
+    return user?['email'];
+  }
+  
+  String? getUsername() {
+    final user = getUser();
+    return user?['username'];
+  }
+  
+  String? getSavedEmail() {
+    return _box.read('saved_email') ?? getUserEmail();
+  }
+  
+  Future<void> saveEmail(String email) async {
+    await _box.write('saved_email', email);
+  }
+  
   Future<void> clearAuth() async {
     await _secureStorage.delete(key: ApiConstants.keyAuthToken);
     await _secureStorage.delete(key: ApiConstants.keyRefreshToken);
     await _box.remove(ApiConstants.keyUser);
+  }
+  
+  Future<void> clearUserData() async {
+    await clearAuth();
+    await _box.erase();
   }
   
   bool get isAuthenticated {
@@ -72,6 +95,24 @@ class StorageService extends GetxService {
   }
   
   // ============== Settings Storage ==============
+  
+  Future<Map<String, dynamic>> getSettings() async {
+    return {
+      'dark_mode': getTheme() == 'dark',
+      'push_notifications': getNotificationSettings()['push'] ?? true,
+      'email_notifications': getNotificationSettings()['email'] ?? true,
+      'biometric_enabled': getBiometricEnabled(),
+      'language': getLanguage(),
+    };
+  }
+  
+  Future<void> saveSetting(String key, dynamic value) async {
+    await _box.write('setting_$key', value);
+  }
+  
+  dynamic getSetting(String key) {
+    return _box.read('setting_$key');
+  }
   
   Future<void> saveTheme(String theme) async {
     await _box.write(ApiConstants.keyTheme, theme);
