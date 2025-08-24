@@ -45,6 +45,10 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>NSSupportsLiveActivities</key>
+	<true/>
+	<key>NSSupportsLiveActivitiesFrequentUpdates</key>
+	<true/>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>AssetWorks needs access to your photo library to allow you to upload images for your investment widgets and portfolio visualizations.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>

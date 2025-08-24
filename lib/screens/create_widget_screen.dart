@@ -74,11 +74,31 @@ class _CreateWidgetScreenState extends State<CreateWidgetScreen>
     
     _animationController.repeat(reverse: true);
     
-    // Update Dynamic Island
-    DynamicIslandService().updateStatus(
-      'Generating widget...',
-      icon: CupertinoIcons.wand_stars,
+    // Start Dynamic Island Live Activity for widget creation
+    DynamicIslandService().startLiveActivity(
+      'widget_creation',
+      {
+        'title': 'Creating Widget',
+        'username': 'You',
+        'status': 'Processing your prompt...',
+        'progress': 0.1,
+      },
     );
+    
+    // Simulate progress updates
+    Future.delayed(Duration(milliseconds: 500), () {
+      DynamicIslandService().updateLiveActivity('widget_creation', {
+        'status': 'Analyzing prompt...',
+        'progress': 0.3,
+      });
+    });
+    
+    Future.delayed(Duration(seconds: 1), () {
+      DynamicIslandService().updateLiveActivity('widget_creation', {
+        'status': 'Generating HTML/CSS...',
+        'progress': 0.6,
+      });
+    });
     
     try {
       final result = await _apiService.createWidgetFromPrompt(
@@ -94,6 +114,8 @@ class _CreateWidgetScreenState extends State<CreateWidgetScreen>
         _animationController.stop();
         _animationController.reset();
         
+        // End Live Activity with success
+        DynamicIslandService().endLiveActivity('widget_creation');
         DynamicIslandService().updateStatus(
           'Widget generated!',
           icon: CupertinoIcons.checkmark_circle_fill,

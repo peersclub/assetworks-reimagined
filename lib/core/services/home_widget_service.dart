@@ -49,25 +49,25 @@ class HomeWidgetService extends GetxService {
 
   /// Update portfolio summary widget
   Future<void> updatePortfolioWidget({
-    double? totalValue,
-    double? dayChange,
-    double? percentChange,
-    int? widgetCount,
+    int? totalWidgets,
+    int? savedWidgets,
+    int? createdToday,
+    String? latestWidget,
   }) async {
     try {
       final data = {
-        'totalValue': totalValue ?? 125430.50,
-        'dayChange': dayChange ?? 1543.25,
-        'percentChange': percentChange ?? 12.5,
-        'widgetCount': widgetCount ?? 8,
+        'totalWidgets': totalWidgets ?? 0,
+        'savedWidgets': savedWidgets ?? 0,
+        'createdToday': createdToday ?? 0,
+        'latestWidget': latestWidget ?? 'No widgets yet',
         'lastUpdate': DateTime.now().toIso8601String(),
       };
 
       // Save data to shared preferences
-      await HomeWidget.saveWidgetData<double>('totalValue', data['totalValue'] as double);
-      await HomeWidget.saveWidgetData<double>('dayChange', data['dayChange'] as double);
-      await HomeWidget.saveWidgetData<double>('percentChange', data['percentChange'] as double);
-      await HomeWidget.saveWidgetData<int>('widgetCount', data['widgetCount'] as int);
+      await HomeWidget.saveWidgetData<int>('totalWidgets', data['totalWidgets'] as int);
+      await HomeWidget.saveWidgetData<int>('savedWidgets', data['savedWidgets'] as int);
+      await HomeWidget.saveWidgetData<int>('createdToday', data['createdToday'] as int);
+      await HomeWidget.saveWidgetData<String>('latestWidget', data['latestWidget'] as String);
       await HomeWidget.saveWidgetData<String>('lastUpdate', data['lastUpdate'] as String);
 
       // Update all widget sizes
