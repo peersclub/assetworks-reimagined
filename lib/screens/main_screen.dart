@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'dashboard_screen.dart';
+import 'dashboard_v2_screen.dart';
 import 'trending_screen.dart';
 import 'create_widget_screen.dart';
 import 'notifications_screen.dart';
@@ -31,11 +32,7 @@ class _MainScreenState extends State<MainScreen> {
   @override
   void initState() {
     super.initState();
-    // Initialize performance monitoring
-    Get.find<PerformanceOptimizationService>().initialize();
-    
-    // Initialize Dynamic Island
-    DynamicIslandService().initialize();
+    // Services are already initialized in main.dart
     
     // Load notification count
     _loadNotificationCount();
@@ -46,6 +43,57 @@ class _MainScreenState extends State<MainScreen> {
     setState(() {
       _notificationCount = 3; // Example count
     });
+  }
+
+  void _showDashboardOptions() {
+    HapticFeedback.mediumImpact();
+    showCupertinoModalPopup(
+      context: context,
+      builder: (BuildContext context) {
+        return CupertinoActionSheet(
+          title: Text('Dashboard Options'),
+          actions: [
+            CupertinoActionSheetAction(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(CupertinoIcons.square_grid_2x2, size: 20),
+                  SizedBox(width: 8),
+                  Text('Classic Dashboard'),
+                ],
+              ),
+              onPressed: () {
+                Navigator.pop(context);
+                setState(() => _currentIndex = 0);
+              },
+            ),
+            CupertinoActionSheetAction(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(CupertinoIcons.rectangle_stack, size: 20),
+                  SizedBox(width: 8),
+                  Text('Twitter-Style Feed (V2)'),
+                ],
+              ),
+              onPressed: () {
+                Navigator.pop(context);
+                Get.to(() => DashboardV2Screen(), 
+                  transition: Transition.cupertino,
+                );
+              },
+            ),
+          ],
+          cancelButton: CupertinoActionSheetAction(
+            isDefaultAction: true,
+            child: Text('Cancel'),
+            onPressed: () {
+              Navigator.pop(context);
+            },
+          ),
+        );
+      },
+    );
   }
 
   @override
@@ -66,9 +114,15 @@ class _MainScreenState extends State<MainScreen> {
         },
         activeColor: CupertinoColors.systemIndigo,
         items: [
-          const BottomNavigationBarItem(
-            icon: Icon(CupertinoIcons.square_grid_2x2),
-            activeIcon: Icon(CupertinoIcons.square_grid_2x2_fill),
+          BottomNavigationBarItem(
+            icon: GestureDetector(
+              onLongPress: _showDashboardOptions,
+              child: Icon(CupertinoIcons.square_grid_2x2),
+            ),
+            activeIcon: GestureDetector(
+              onLongPress: _showDashboardOptions,
+              child: Icon(CupertinoIcons.square_grid_2x2_fill),
+            ),
             label: 'Dashboard',
           ),
           const BottomNavigationBarItem(

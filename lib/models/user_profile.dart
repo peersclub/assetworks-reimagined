@@ -35,7 +35,7 @@ class UserProfile {
 
   factory UserProfile.fromJson(Map<String, dynamic> json) {
     return UserProfile(
-      id: json['id'] ?? '',
+      id: json['id']?.toString() ?? '',
       name: json['name'],
       email: json['email'],
       username: json['username'],
@@ -48,7 +48,9 @@ class UserProfile {
       verified: json['verified'] ?? false,
       is_following: json['is_following'] ?? false,
       created_at: json['created_at'] != null 
-          ? DateTime.parse(json['created_at'])
+          ? (json['created_at'] is int 
+              ? DateTime.fromMillisecondsSinceEpoch(json['created_at'])
+              : DateTime.parse(json['created_at'].toString()))
           : null,
       settings: json['settings'],
       social_links: json['social_links'],

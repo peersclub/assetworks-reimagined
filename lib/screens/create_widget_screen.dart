@@ -66,11 +66,13 @@ class _CreateWidgetScreenState extends State<CreateWidgetScreen>
       return;
     }
     
-    setState(() {
-      _isGenerating = true;
-      _errorMessage = null;
-      _generatedWidget = null;
-    });
+    if (mounted) {
+      setState(() {
+        _isGenerating = true;
+        _errorMessage = null;
+        _generatedWidget = null;
+      });
+    }
     
     _animationController.repeat(reverse: true);
     
@@ -106,10 +108,12 @@ class _CreateWidgetScreenState extends State<CreateWidgetScreen>
       );
       
       if (result['success'] == true && result['widget'] != null) {
-        setState(() {
-          _generatedWidget = DashboardWidget.fromJson(result['widget']);
-          _isGenerating = false;
-        });
+        if (mounted) {
+          setState(() {
+            _generatedWidget = DashboardWidget.fromJson(result['widget']);
+            _isGenerating = false;
+          });
+        }
         
         _animationController.stop();
         _animationController.reset();
@@ -124,10 +128,12 @@ class _CreateWidgetScreenState extends State<CreateWidgetScreen>
         // Navigate to preview
         _showWidgetPreview();
       } else {
-        setState(() {
-          _errorMessage = result['message'] ?? 'Failed to generate widget';
-          _isGenerating = false;
-        });
+        if (mounted) {
+          setState(() {
+            _errorMessage = result['message'] ?? 'Failed to generate widget';
+            _isGenerating = false;
+          });
+        }
         
         _animationController.stop();
         _animationController.reset();
@@ -138,10 +144,12 @@ class _CreateWidgetScreenState extends State<CreateWidgetScreen>
         );
       }
     } catch (e) {
-      setState(() {
-        _errorMessage = 'An error occurred. Please try again.';
-        _isGenerating = false;
-      });
+      if (mounted) {
+        setState(() {
+          _errorMessage = 'An error occurred. Please try again.';
+          _isGenerating = false;
+        });
+      }
       
       _animationController.stop();
       _animationController.reset();
@@ -235,10 +243,12 @@ class _CreateWidgetScreenState extends State<CreateWidgetScreen>
                       color: CupertinoColors.systemGrey5,
                       onPressed: () {
                         Navigator.pop(context);
-                        setState(() {
-                          _generatedWidget = null;
-                          _promptController.clear();
-                        });
+                        if (mounted) {
+                          setState(() {
+                            _generatedWidget = null;
+                            _promptController.clear();
+                          });
+                        }
                       },
                       child: const Text(
                         'Generate Another',
@@ -469,7 +479,7 @@ class _CreateWidgetScreenState extends State<CreateWidgetScreen>
                 children: _examplePrompts.take(4).map((prompt) {
                   return GestureDetector(
                     onTap: () {
-                      if (!_isGenerating) {
+                      if (!_isGenerating && mounted) {
                         setState(() {
                           _promptController.text = prompt;
                         });

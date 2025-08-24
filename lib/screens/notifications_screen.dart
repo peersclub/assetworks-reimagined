@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import '../services/api_service.dart';
 import '../services/dynamic_island_service.dart';
+import '../models/notification_model.dart';
 
 class NotificationsScreen extends StatefulWidget {
   const NotificationsScreen({Key? key}) : super(key: key);
@@ -15,7 +16,7 @@ class NotificationsScreen extends StatefulWidget {
 class _NotificationsScreenState extends State<NotificationsScreen> {
   final ApiService _apiService = Get.find<ApiService>();
   
-  List<NotificationItem> _notifications = [];
+  List<NotificationModel> _notifications = [];
   bool _isLoading = true;
   
   @override
@@ -28,12 +29,10 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     setState(() => _isLoading = true);
     
     try {
-      final notifications = await _apiService.getNotifications();
+      final notifications = await _apiService.fetchNotifications();
       
       setState(() {
-        _notifications = notifications.map((n) => 
-          NotificationItem.fromJson(n)
-        ).toList();
+        _notifications = notifications;
         _isLoading = false;
       });
       
@@ -182,7 +181,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     );
   }
   
-  Widget _buildNotificationTile(NotificationItem notification) {
+  Widget _buildNotificationTile(NotificationModel notification) {
     IconData icon;
     Color iconColor;
     
@@ -218,20 +217,20 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         HapticFeedback.lightImpact();
         
         // Navigate based on notification type
-        if (notification.widgetId != null) {
+        if (notification.widget_id != null) {
           Get.toNamed('/widget-preview', arguments: {
-            'id': notification.widgetId,
+            'id': notification.widget_id,
           });
-        } else if (notification.userId != null) {
+        } else if (notification.user_id != null) {
           Get.toNamed('/user-profile', arguments: {
-            'id': notification.userId,
+            'id': notification.user_id,
           });
         }
       },
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: notification.isRead
+          color: notification.is_read
               ? Colors.transparent
               : CupertinoColors.systemIndigo.withOpacity(0.05),
           border: Border(
@@ -273,9 +272,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                         color: CupertinoTheme.of(context).textTheme.textStyle.color,
                       ),
                       children: [
-                        if (notification.userName != null)
+                        if (notification.user_name != null)
                           TextSpan(
-                            text: notification.userName,
+                            text: notification.user_name,
                             style: const TextStyle(fontWeight: FontWeight.w600),
                           ),
                         TextSpan(text: ' ${notification.message}'),
@@ -284,7 +283,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    _getTimeAgo(notification.createdAt),
+                    _getTimeAgo(notification.created_at),
                     style: TextStyle(
                       fontSize: 13,
                       color: CupertinoColors.systemGrey,
@@ -295,7 +294,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
             ),
             
             // Unread indicator
-            if (!notification.isRead)
+            if (!notification.is_read)
               Container(
                 width: 8,
                 height: 8,
@@ -311,37 +310,3 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   }
 }
 
-class NotificationItem {
-  final String id;
-  final String type;
-  final String message;
-  final String? userName;
-  final String? userId;
-  final String? widgetId;
-  final bool isRead;
-  final DateTime createdAt;
-  
-  NotificationItem({
-    required this.id,
-    required this.type,
-    required this.message,
-    this.userName,
-    this.userId,
-    this.widgetId,
-    required this.isRead,
-    required this.createdAt,
-  });
-  
-  factory NotificationItem.fromJson(Map<String, dynamic> json) {
-    return NotificationItem(
-      id: json['id'] ?? '',
-      type: json['type'] ?? 'general',
-      message: json['message'] ?? '',
-      userName: json['user_name'],
-      userId: json['user_id'],
-      widgetId: json['widget_id'],
-      isRead: json['is_read'] ?? false,
-      createdAt: DateTime.parse(json['created_at'] ?? DateTime.now().toIso8601String()),
-    );
-  }
-}

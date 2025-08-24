@@ -5,7 +5,8 @@ import 'package:get/get.dart';
 import '../services/api_service.dart';
 import '../models/dashboard_widget.dart';
 import '../widgets/widget_card.dart';
-import '../presentation/widgets/ios/ios_shimmer_loader.dart';
+import '../widgets/widget_card_shimmer.dart';
+import '../screens/widget_preview_screen.dart';
 
 class TrendingScreen extends StatefulWidget {
   const TrendingScreen({Key? key}) : super(key: key);
@@ -215,7 +216,10 @@ class _TrendingScreenState extends State<TrendingScreen>
             // Content
             Expanded(
               child: _isLoading
-                  ? Center(child: IOSShimmerLoader())
+                  ? Padding(
+                      padding: EdgeInsets.all(16),
+                      child: WidgetCardShimmer(count: 5),
+                    )
                   : TabBarView(
                       controller: _tabController,
                       children: [

@@ -57,7 +57,8 @@ class _WidgetPreviewScreenState extends State<WidgetPreviewScreen> {
           },
         ),
       )
-      ..loadRequest(Uri.parse(dashboardWidget.preview_version_url ?? 
+      ..loadRequest(Uri.parse(dashboardWidget.full_version_url ?? 
+          dashboardWidget.preview_version_url ?? 
           'https://assetworks.ai/widget/${dashboardWidget.id}'));
   }
   

@@ -84,54 +84,124 @@ class ApiService extends getx.GetxService {
   // Authentication APIs
   Future<Map<String, dynamic>> sendOTP(String email) async {
     try {
+      print('Sending OTP to email: $email');
+      print('API URL: $baseUrl$otpSend');
+      
       final response = await _dio.post(
         otpSend,
-        data: {'email': email},
+        data: {'identifier': email},  // API expects 'identifier' not 'email'
       );
+      
+      print('OTP Response Status: ${response.statusCode}');
+      print('OTP Response Data: ${response.data}');
+      
       return {
         'success': response.statusCode == 200,
         'data': response.data,
+        'message': response.data?['message'] ?? 'OTP sent successfully',
       };
-    } catch (e) {
-      print('Error sending OTP: $e');
+    } on DioException catch (e) {
+      print('DioException sending OTP: ${e.type}');
+      print('Error message: ${e.message}');
+      print('Error response: ${e.response?.data}');
+      
+      String errorMessage = 'Failed to send OTP';
+      
+      if (e.type == DioExceptionType.connectionTimeout) {
+        errorMessage = 'Connection timeout. Please check your internet.';
+      } else if (e.type == DioExceptionType.connectionError) {
+        errorMessage = 'Connection error. Please check your internet.';
+      } else if (e.response != null) {
+        // Handle both string and JSON error responses
+        var responseData = e.response?.data;
+        if (responseData is String) {
+          errorMessage = responseData;
+        } else if (responseData is Map) {
+          errorMessage = responseData['message'] ?? 'Server error occurred';
+        }
+      }
+      
       return {
         'success': false,
-        'message': 'Failed to send OTP',
+        'message': errorMessage,
+      };
+    } catch (e) {
+      print('Unexpected error sending OTP: $e');
+      return {
+        'success': false,
+        'message': 'An unexpected error occurred',
       };
     }
   }
   
   Future<Map<String, dynamic>> verifyOTP(String email, String otp) async {
     try {
+      print('Verifying OTP for email: $email');
+      print('OTP Code: $otp');
+      print('Verify URL: $baseUrl$otpVerify');
+      
       final response = await _dio.post(
         otpVerify,
         data: {
-          'email': email,
+          'identifier': email,  // API expects 'identifier' not 'email'
           'otp': otp,
         },
       );
       
-      if (response.statusCode == 200 && response.data['data'] != null) {
-        final token = response.data['data']['token'];
+      print('Verify Response Status: ${response.statusCode}');
+      print('Verify Response Data: ${response.data}');
+      
+      // The API returns user and token directly, not wrapped in 'data'
+      if (response.statusCode == 200) {
+        final token = response.data['token'];
+        final user = response.data['user'];
+        
         if (token != null) {
           await _storage.write('auth_token', token);
-          await _storage.write('user_data', response.data['data']);
+          await _storage.write('user_data', response.data);
+          
+          return {
+            'success': true,
+            'data': {
+              'token': token,
+              'user': user,
+              'expires_in': response.data['expires_in'],
+            },
+          };
         }
-        return {
-          'success': true,
-          'data': response.data['data'],
-        };
       }
       
       return {
         'success': false,
         'message': response.data['message'] ?? 'Verification failed',
       };
-    } catch (e) {
-      print('Error verifying OTP: $e');
+    } on DioException catch (e) {
+      print('DioException verifying OTP: ${e.type}');
+      print('Error response status: ${e.response?.statusCode}');
+      print('Error response data: ${e.response?.data}');
+      
+      String errorMessage = 'Failed to verify OTP';
+      
+      if (e.response?.statusCode == 403) {
+        errorMessage = 'Invalid or expired OTP. Please try again.';
+      } else if (e.response != null) {
+        var responseData = e.response?.data;
+        if (responseData is String) {
+          errorMessage = responseData;
+        } else if (responseData is Map) {
+          errorMessage = responseData['message'] ?? 'Verification failed';
+        }
+      }
+      
       return {
         'success': false,
-        'message': 'Failed to verify OTP',
+        'message': errorMessage,
+      };
+    } catch (e) {
+      print('Unexpected error verifying OTP: $e');
+      return {
+        'success': false,
+        'message': 'An unexpected error occurred',
       };
     }
   }
@@ -140,7 +210,7 @@ class ApiService extends getx.GetxService {
     try {
       final response = await _dio.post(
         otpSend,
-        data: {'email': email},
+        data: {'identifier': email},  // API expects 'identifier' not 'email'
       );
       return {
         'success': response.statusCode == 200,
@@ -230,7 +300,7 @@ class ApiService extends getx.GetxService {
   // User widgets and saved widgets
   Future<List<DashboardWidget>> getUserWidgets() async {
     try {
-      final response = await _dio.get('/api/v1/users/widgets');
+      final response = await _dio.get('/api/v1/personal/widgets');
       if (response.statusCode == 200) {
         final List widgets = response.data['data'] ?? [];
         return widgets.map((w) => DashboardWidget.fromJson(w)).toList();
@@ -244,7 +314,7 @@ class ApiService extends getx.GetxService {
   
   Future<List<DashboardWidget>> getSavedWidgets() async {
     try {
-      final response = await _dio.get('/api/v1/users/saved-widgets');
+      final response = await _dio.get('/api/v1/personal/saved-widgets');
       if (response.statusCode == 200) {
         final List widgets = response.data['data'] ?? [];
         return widgets.map((w) => DashboardWidget.fromJson(w)).toList();
@@ -393,22 +463,77 @@ class ApiService extends getx.GetxService {
   // Widget Actions APIs
   Future<bool> saveWidgetToProfile(String widgetId, {String visibility = 'public'}) async {
     try {
-      final response = await _dio.post(
-        '$saveWidget/$widgetId/save',
-        data: {'visibility': visibility},
-      );
+      // Check current save status first
+      final isSaved = await isWidgetSaved(widgetId);
       
-      if (response.statusCode == 409) {
-        throw Exception('Widget already saved');
+      if (isSaved) {
+        // If already saved, unsave it
+        final response = await _dio.delete(
+          '/api/v1/personal/saved-widgets/$widgetId',
+        );
+        return response.statusCode == 200;
+      } else {
+        // If not saved, save it
+        final response = await _dio.post(
+          '/api/v1/personal/saved-widgets',
+          data: {
+            'widget_id': widgetId,
+            'visibility': visibility,
+          },
+        );
+        return response.statusCode == 200 || response.statusCode == 201;
       }
-      
-      return response.statusCode == 200;
-    } catch (e) {
+    } on DioException catch (e) {
       print('Error saving widget: $e');
-      if (e.toString().contains('409')) {
-        throw Exception('Widget already saved');
+      print('Response: ${e.response?.data}');
+      
+      // If 409 conflict, widget is already saved
+      if (e.response?.statusCode == 409) {
+        // Try to unsave instead
+        try {
+          final response = await _dio.delete(
+            '/api/v1/personal/saved-widgets/$widgetId',
+          );
+          return response.statusCode == 200;
+        } catch (e) {
+          print('Error unsaving widget: $e');
+          return false;
+        }
       }
       return false;
+    } catch (e) {
+      print('Unexpected error saving widget: $e');
+      return false;
+    }
+  }
+  
+  Future<bool> isWidgetSaved(String widgetId) async {
+    try {
+      final savedWidgets = await fetchSavedWidgets();
+      return savedWidgets.any((w) => w.id == widgetId);
+    } catch (e) {
+      return false;
+    }
+  }
+  
+  Future<List<DashboardWidget>> fetchSavedWidgets({int page = 1, int limit = 20}) async {
+    try {
+      final response = await _dio.get(
+        '/api/v1/personal/saved-widgets',
+        queryParameters: {
+          'page': page,
+          'limit': limit,
+        },
+      );
+      
+      if (response.statusCode == 200 && response.data['data'] != null) {
+        final List<dynamic> widgetData = response.data['data'];
+        return widgetData.map((json) => DashboardWidget.fromJson(json)).toList();
+      }
+      return [];
+    } catch (e) {
+      print('Error fetching saved widgets: $e');
+      return [];
     }
   }
   
@@ -428,6 +553,30 @@ class ApiService extends getx.GetxService {
       return response.statusCode == 200;
     } catch (e) {
       print('Error disliking widget: $e');
+      return false;
+    }
+  }
+  
+  Future<bool> followUser(String userId) async {
+    try {
+      final response = await _dio.post('/api/v1/social/follow',
+        data: {'user_id': userId}
+      );
+      return response.statusCode == 200 || response.statusCode == 201;
+    } catch (e) {
+      print('Error following user: $e');
+      return false;
+    }
+  }
+  
+  Future<bool> unfollowUser(String userId) async {
+    try {
+      final response = await _dio.post('/api/v1/social/unfollow',
+        data: {'user_id': userId}
+      );
+      return response.statusCode == 200 || response.statusCode == 201;
+    } catch (e) {
+      print('Error unfollowing user: $e');
       return false;
     }
   }
@@ -557,26 +706,7 @@ class ApiService extends getx.GetxService {
     }
   }
   
-  // Social APIs
-  Future<bool> followUser(String userId) async {
-    try {
-      final response = await _dio.post('/api/v1/users/profile/follow/$userId');
-      return response.statusCode == 200;
-    } catch (e) {
-      print('Error following user: $e');
-      return false;
-    }
-  }
-  
-  Future<bool> unfollowUser(String userId) async {
-    try {
-      final response = await _dio.post('/api/v1/users/profile/unfollow/$userId');
-      return response.statusCode == 200;
-    } catch (e) {
-      print('Error unfollowing user: $e');
-      return false;
-    }
-  }
+  // Social APIs (removed duplicates - defined above)
   
   Future<List<Map<String, dynamic>>> fetchFollowers({
     int page = 1,

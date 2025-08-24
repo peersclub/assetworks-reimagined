@@ -37,10 +37,10 @@ import UserNotifications
   }
   
   private func setupPushNotifications(_ application: UIApplication) {
-    // Initialize Firebase
-    if FirebaseApp.app() == nil {
-      FirebaseApp.configure()
-    }
+    // Initialize Firebase (commented out - may be initialized by Flutter plugin)
+    // if FirebaseApp.app() == nil {
+    //   FirebaseApp.configure()
+    // }
     
     // Setup messaging delegate
     Messaging.messaging().delegate = self

@@ -54,6 +54,12 @@ void main() async {
   Get.lazyPut(() => ApiClient());
   Get.lazyPut(() => ApiService());
   
+  // Register iOS 18 services with GetX
+  Get.lazyPut(() => PerformanceOptimizationService());
+  Get.lazyPut(() => AccessibilityService());
+  Get.lazyPut(() => KeyboardNavigationService());
+  Get.lazyPut(() => DynamicTypeService());
+  
   // Set preferred orientations
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
@@ -65,7 +71,7 @@ void main() async {
   Future.delayed(Duration(seconds: 1), () {
     DynamicIslandService().initialize();
     HomeWidgetService().initialize();
-    PerformanceOptimizationService().initialize();
+    Get.find<PerformanceOptimizationService>().initialize();
   });
   
   // Set iOS system UI

@@ -117,7 +117,8 @@ class _OtpLoginScreenState extends State<OtpLoginScreen>
       }
     } catch (e) {
       setState(() => _isLoading = false);
-      _showErrorDialog('An error occurred. Please try again.');
+      print('Error in OTP screen: $e');
+      _showErrorDialog('Error: ${e.toString()}');
     }
   }
   

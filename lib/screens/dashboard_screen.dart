@@ -2,11 +2,13 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import '../presentation/widgets/ios/ios_empty_state.dart';
-import '../presentation/widgets/ios/ios_shimmer_loader.dart';
+import '../widgets/widget_card_shimmer.dart';
 import '../services/dynamic_island_service.dart';
 import '../services/api_service.dart';
 import '../models/dashboard_widget.dart';
-import '../widgets/widget_card.dart';
+import '../widgets/widget_card_v2.dart';
+import '../screens/widget_preview_screen.dart';
+import '../screens/widget_remix_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({Key? key}) : super(key: key);
@@ -230,6 +232,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
     HapticFeedback.lightImpact();
     
     switch (action) {
+      case 'preview':
+        Get.to(() => const WidgetPreviewScreen(), 
+          arguments: widget,
+          transition: Transition.cupertino,
+        );
+        break;
+        
+      case 'remix':
+        Get.to(() => const WidgetRemixScreen(), 
+          arguments: widget,
+          transition: Transition.cupertino,
+        );
+        break;
+        
       case 'save':
         final success = await _apiService.saveWidgetToProfile(widget.id);
         if (success) {
@@ -416,9 +432,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
             )
           else if (_isLoading && _widgets.isEmpty)
-            SliverFillRemaining(
-              child: Center(
-                child: IOSShimmerLoader(),
+            SliverPadding(
+              padding: const EdgeInsets.all(16),
+              sliver: SliverToBoxAdapter(
+                child: WidgetCardShimmer(count: 5),
               ),
             )
           else
@@ -430,7 +447,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     if (index < _widgets.length) {
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 16),
-                        child: WidgetCard(
+                        child: WidgetCardV2(
                           widget: _widgets[index],
                           onAction: (action) => _handleWidgetAction(
                             _widgets[index],

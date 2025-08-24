@@ -120,7 +120,8 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
       }
     } catch (e) {
       setState(() => _isLoading = false);
-      _showErrorDialog('Verification failed. Please try again.');
+      print('Error in OTP verification screen: $e');
+      _showErrorDialog('Verification failed: ${e.toString()}');
     }
   }
   
