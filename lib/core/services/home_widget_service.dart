@@ -23,6 +23,11 @@ class HomeWidgetService extends GetxService {
     super.onInit();
     _initializeHomeWidget();
   }
+  
+  /// Public initialize method for manual initialization
+  Future<void> initialize() async {
+    await _initializeHomeWidget();
+  }
 
   Future<void> _initializeHomeWidget() async {
     try {
@@ -181,17 +186,14 @@ class HomeWidgetService extends GetxService {
   }
 
   /// Pin widget to home screen (iOS 14+)
-  Future<bool> requestPinWidget() async {
+  Future<void> requestPinWidget() async {
     try {
       // This shows the widget gallery for the user to add
-      final result = await HomeWidget.requestPinWidget(
+      await HomeWidget.requestPinWidget(
         name: mediumWidgetId,
-        iOSName: mediumWidgetId,
       );
-      return result ?? false;
     } catch (e) {
       print('Error requesting pin widget: $e');
-      return false;
     }
   }
 

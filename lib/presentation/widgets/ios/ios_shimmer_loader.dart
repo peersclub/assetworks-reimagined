@@ -1,76 +1,70 @@
 import 'package:flutter/cupertino.dart';
-import '../../../core/theme/ios_theme.dart';
 
-class iOSShimmerLoader extends StatefulWidget {
-  final double? height;
-  final double? width;
-
-  const iOSShimmerLoader({
+class IOSShimmerLoader extends StatefulWidget {
+  final double width;
+  final double height;
+  
+  const IOSShimmerLoader({
     Key? key,
-    this.height,
-    this.width,
+    this.width = 200,
+    this.height = 100,
   }) : super(key: key);
 
   @override
-  State<iOSShimmerLoader> createState() => _iOSShimmerLoaderState();
+  State<IOSShimmerLoader> createState() => _IOSShimmerLoaderState();
 }
 
-class _iOSShimmerLoaderState extends State<iOSShimmerLoader>
+class _IOSShimmerLoaderState extends State<IOSShimmerLoader>
     with SingleTickerProviderStateMixin {
-  late AnimationController _animationController;
+  late AnimationController _controller;
   late Animation<double> _animation;
 
   @override
   void initState() {
     super.initState();
-    _animationController = AnimationController(
+    _controller = AnimationController(
       duration: const Duration(milliseconds: 1500),
       vsync: this,
     )..repeat();
-
+    
     _animation = Tween<double>(
       begin: -1.0,
       end: 2.0,
     ).animate(CurvedAnimation(
-      parent: _animationController,
+      parent: _controller,
       curve: Curves.easeInOut,
     ));
   }
 
   @override
   void dispose() {
-    _animationController.dispose();
+    _controller.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final isDarkMode = 
-        MediaQuery.of(context).platformBrightness == Brightness.dark;
-
     return AnimatedBuilder(
       animation: _animation,
       builder: (context, child) {
         return Container(
-          height: widget.height ?? 100,
-          width: widget.width ?? double.infinity,
-          margin: const EdgeInsets.only(bottom: iOS18Theme.spacing12),
+          width: widget.width,
+          height: widget.height,
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(iOS18Theme.mediumRadius),
+            borderRadius: BorderRadius.circular(12),
             gradient: LinearGradient(
-              begin: Alignment(-1.0 + _animation.value, 0),
-              end: Alignment(1.0 + _animation.value, 0),
-              colors: isDarkMode
-                  ? [
-                      iOS18Theme.systemGray5.darkColor,
-                      iOS18Theme.systemGray4.darkColor,
-                      iOS18Theme.systemGray5.darkColor,
-                    ]
-                  : [
-                      iOS18Theme.systemGray6.color,
-                      iOS18Theme.systemGray5.color,
-                      iOS18Theme.systemGray6.color,
-                    ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                CupertinoColors.systemGrey5,
+                CupertinoColors.systemGrey4,
+                CupertinoColors.systemGrey5,
+              ],
+              stops: [
+                _animation.value - 0.3,
+                _animation.value,
+                _animation.value + 0.3,
+              ].map((e) => e.clamp(0.0, 1.0)).toList(),
             ),
           ),
         );

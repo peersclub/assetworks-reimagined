@@ -1,13 +1,13 @@
 import 'package:get/get.dart';
 import 'package:local_auth/local_auth.dart';
-import '../../core/network/api_client.dart';
+import '../../data/services/api_service.dart';
 import '../../core/services/storage_service.dart';
 import '../../data/models/user_model.dart';
 import '../../core/utils/biometric_auth.dart';
-import 'otp_controller.dart';
+import 'dart:io';
 
 class AuthController extends GetxController {
-  final ApiClient _apiClient = ApiClient();
+  final ApiService _apiService = Get.find<ApiService>();
   final StorageService _storageService = Get.find<StorageService>();
   final LocalAuthentication _localAuth = LocalAuthentication();
   final BiometricAuth _biometricAuth = BiometricAuth();
@@ -47,14 +47,14 @@ class AuthController extends GetxController {
       isLoading.value = true;
       
       // Call logout API
-      await _apiClient.signOut();
+      await _apiService.logout();
       
       // Clear local data
       await _storageService.clearAuth();
       user.value = null;
       isAuthenticated.value = false;
       
-      Get.offAllNamed('/landing-screen');
+      Get.offAllNamed('/login');
       
       Get.snackbar(
         'Logged Out',
@@ -66,7 +66,7 @@ class AuthController extends GetxController {
       await _storageService.clearAuth();
       user.value = null;
       isAuthenticated.value = false;
-      Get.offAllNamed('/landing-screen');
+      Get.offAllNamed('/login');
     } finally {
       isLoading.value = false;
     }
@@ -137,8 +137,7 @@ class AuthController extends GetxController {
         
         if (storedEmail != null && storedPassword != null) {
           // Login with stored credentials
-          await loginWithCredentials(storedEmail, storedPassword);
-          return true;
+          return await loginWithCredentials(storedEmail, storedPassword);
         } else {
           // Get stored token and user data for quick login
           final token = await _storageService.getAuthToken();
@@ -208,56 +207,274 @@ class AuthController extends GetxController {
     }
   }
   
-  Future<void> loginWithCredentials(String email, String password) async {
+  Future<bool> loginWithCredentials(String email, String password) async {
     try {
       isLoading.value = true;
       error.value = '';
       
-      // Use OTP controller for login
-      final otpController = Get.find<OtpController>();
-      // For now, we'll use stored credentials approach
-      
-      // Save auth data for demo
-      await _storageService.saveAuthToken('demo-token');
-      await _storageService.saveUser({'email': email, 'id': '1'});
-      
-      user.value = UserModel(
-        id: '1',
-        username: email.split('@')[0],
+      // Call real API
+      final response = await _apiService.login(
         email: email,
-        widgetCount: 0,
-        followersCount: 0,
-        followingCount: 0,
-        isVerified: false,
-        isPremium: false,
-        joinedAt: DateTime.now(),
+        password: password,
       );
+      
+      // Extract user data from response
+      final userData = response['user'];
+      user.value = UserModel.fromJson(userData);
       isAuthenticated.value = true;
       
       // Navigate to main screen
       Get.offAllNamed('/main');
       
-      // Real API call would be:
-      // final response = await _apiClient.signInWithEmail(email, password);
-      // if (response.statusCode == 200 && response.data != null) {
-      //   final userData = response.data['data']['user'];
-      //   final token = response.data['data']['token'];
-      //   
-      //   // Save auth data
-      //   await _storageService.saveAuthToken(token);
-      //   await _storageService.saveUser(userData);
-      //   
-      //   user.value = UserModel.fromJson(userData);
-      //   isAuthenticated.value = true;
-      //   
-      //   // Navigate to main screen
-      //   Get.offAllNamed('/main');
-      // } else {
-      //   error.value = 'Invalid credentials';
-      // }
+      Get.snackbar(
+        'Welcome back!',
+        'Successfully logged in',
+        snackPosition: SnackPosition.TOP,
+      );
+      
+      return true;
     } catch (e) {
       print('Login error: $e');
-      error.value = 'Login failed. Please try again.';
+      error.value = e.toString();
+      
+      Get.snackbar(
+        'Login Failed',
+        error.value,
+        snackPosition: SnackPosition.BOTTOM,
+      );
+      
+      return false;
+    } finally {
+      isLoading.value = false;
+    }
+  }
+  
+  Future<bool> register({
+    required String name,
+    required String email,
+    required String password,
+    String? phone,
+  }) async {
+    try {
+      isLoading.value = true;
+      error.value = '';
+      
+      // Call real API
+      final response = await _apiService.signup(
+        name: name,
+        email: email,
+        password: password,
+        phone: phone,
+      );
+      
+      Get.snackbar(
+        'Registration Successful',
+        'Please check your email to verify your account',
+        snackPosition: SnackPosition.TOP,
+      );
+      
+      // Navigate to OTP verification
+      Get.toNamed('/otp', arguments: {'email': email});
+      
+      return true;
+    } catch (e) {
+      print('Registration error: $e');
+      error.value = e.toString();
+      
+      Get.snackbar(
+        'Registration Failed',
+        error.value,
+        snackPosition: SnackPosition.BOTTOM,
+      );
+      
+      return false;
+    } finally {
+      isLoading.value = false;
+    }
+  }
+  
+  Future<bool> verifyOTP(String email, String otp) async {
+    try {
+      isLoading.value = true;
+      error.value = '';
+      
+      // Call real API
+      final response = await _apiService.verifyOTP(
+        email: email,
+        otp: otp,
+      );
+      
+      // Extract user data from response
+      final userData = response['user'];
+      user.value = UserModel.fromJson(userData);
+      isAuthenticated.value = true;
+      
+      Get.snackbar(
+        'Welcome!',
+        'Account verified successfully',
+        snackPosition: SnackPosition.TOP,
+      );
+      
+      // Navigate to main screen or onboarding
+      Get.offAllNamed('/onboarding');
+      
+      return true;
+    } catch (e) {
+      print('OTP verification error: $e');
+      error.value = e.toString();
+      
+      Get.snackbar(
+        'Verification Failed',
+        error.value,
+        snackPosition: SnackPosition.BOTTOM,
+      );
+      
+      return false;
+    } finally {
+      isLoading.value = false;
+    }
+  }
+  
+  Future<bool> forgotPassword(String email) async {
+    try {
+      isLoading.value = true;
+      error.value = '';
+      
+      // Call real API
+      await _apiService.forgotPassword(email);
+      
+      Get.snackbar(
+        'Password Reset',
+        'Check your email for reset instructions',
+        snackPosition: SnackPosition.TOP,
+      );
+      
+      return true;
+    } catch (e) {
+      print('Forgot password error: $e');
+      error.value = e.toString();
+      
+      Get.snackbar(
+        'Reset Failed',
+        error.value,
+        snackPosition: SnackPosition.BOTTOM,
+      );
+      
+      return false;
+    } finally {
+      isLoading.value = false;
+    }
+  }
+  
+  Future<bool> resetPassword(String token, String newPassword) async {
+    try {
+      isLoading.value = true;
+      error.value = '';
+      
+      // Call real API
+      await _apiService.resetPassword(
+        token: token,
+        newPassword: newPassword,
+      );
+      
+      Get.snackbar(
+        'Password Updated',
+        'Your password has been reset successfully',
+        snackPosition: SnackPosition.TOP,
+      );
+      
+      // Navigate to login
+      Get.offAllNamed('/login');
+      
+      return true;
+    } catch (e) {
+      print('Reset password error: $e');
+      error.value = e.toString();
+      
+      Get.snackbar(
+        'Reset Failed',
+        error.value,
+        snackPosition: SnackPosition.BOTTOM,
+      );
+      
+      return false;
+    } finally {
+      isLoading.value = false;
+    }
+  }
+  
+  Future<bool> updateProfile({
+    String? name,
+    String? bio,
+    String? phone,
+    File? avatar,
+  }) async {
+    try {
+      isLoading.value = true;
+      error.value = '';
+      
+      // Call real API
+      final updatedUser = await _apiService.updateProfile(
+        name: name,
+        bio: bio,
+        phone: phone,
+        avatar: avatar,
+      );
+      
+      user.value = updatedUser;
+      
+      Get.snackbar(
+        'Profile Updated',
+        'Your profile has been updated successfully',
+        snackPosition: SnackPosition.TOP,
+      );
+      
+      return true;
+    } catch (e) {
+      print('Update profile error: $e');
+      error.value = e.toString();
+      
+      Get.snackbar(
+        'Update Failed',
+        error.value,
+        snackPosition: SnackPosition.BOTTOM,
+      );
+      
+      return false;
+    } finally {
+      isLoading.value = false;
+    }
+  }
+  
+  Future<bool> changePassword(String currentPassword, String newPassword) async {
+    try {
+      isLoading.value = true;
+      error.value = '';
+      
+      // Call real API
+      await _apiService.changePassword(
+        currentPassword: currentPassword,
+        newPassword: newPassword,
+      );
+      
+      Get.snackbar(
+        'Password Changed',
+        'Your password has been updated successfully',
+        snackPosition: SnackPosition.TOP,
+      );
+      
+      return true;
+    } catch (e) {
+      print('Change password error: $e');
+      error.value = e.toString();
+      
+      Get.snackbar(
+        'Change Failed',
+        error.value,
+        snackPosition: SnackPosition.BOTTOM,
+      );
+      
+      return false;
     } finally {
       isLoading.value = false;
     }

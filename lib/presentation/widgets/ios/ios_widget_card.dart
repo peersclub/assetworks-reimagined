@@ -1,97 +1,131 @@
 import 'package:flutter/cupertino.dart';
-import '../../../core/theme/ios_theme.dart';
 
-class iOSWidgetCard extends StatelessWidget {
-  final dynamic widget;
+class IOSWidgetCard extends StatelessWidget {
+  final String title;
+  final String subtitle;
+  final IconData icon;
+  final Color color;
   final VoidCallback? onTap;
-  final VoidCallback? onLongPress;
-  final bool isCompact;
+  final String? model;
+  final String? usage;
+  final String? type;
 
-  const iOSWidgetCard({
+  const IOSWidgetCard({
     Key? key,
-    required this.widget,
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+    required this.color,
     this.onTap,
-    this.onLongPress,
-    this.isCompact = false,
+    this.model,
+    this.usage,
+    this.type,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      onLongPress: onLongPress,
+    return CupertinoButton(
+      padding: EdgeInsets.zero,
+      onPressed: onTap,
       child: Container(
-        padding: EdgeInsets.all(isCompact ? iOS18Theme.spacing12 : iOS18Theme.spacing16),
         decoration: BoxDecoration(
-          color: iOS18Theme.secondarySystemGroupedBackground.resolveFrom(context),
-          borderRadius: BorderRadius.circular(iOS18Theme.largeRadius),
+          color: CupertinoTheme.of(context).barBackgroundColor,
+          borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: CupertinoColors.systemGrey.withOpacity(0.1),
+              color: color.withOpacity(0.2),
               blurRadius: 10,
-              offset: const Offset(0, 2),
+              offset: const Offset(0, 4),
             ),
           ],
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: iOS18Theme.systemBlue.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(iOS18Theme.smallRadius),
-                  ),
-                  child: Icon(
-                    CupertinoIcons.chart_bar_fill,
-                    size: 20,
-                    color: iOS18Theme.systemBlue,
-                  ),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                width: 50,
+                height: 50,
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                const SizedBox(width: iOS18Theme.spacing12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        widget.title ?? 'Widget',
-                        style: iOS18Theme.headline.copyWith(
-                          color: iOS18Theme.label.resolveFrom(context),
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      Text(
-                        widget.type ?? 'Chart',
-                        style: iOS18Theme.caption1.copyWith(
-                          color: iOS18Theme.secondaryLabel.resolveFrom(context),
-                        ),
-                      ),
-                    ],
-                  ),
+                child: Icon(
+                  icon,
+                  color: color,
+                  size: 28,
                 ),
-                Icon(
-                  CupertinoIcons.chevron_right,
-                  size: 16,
-                  color: iOS18Theme.tertiaryLabel.resolveFrom(context),
-                ),
-              ],
-            ),
-            if (!isCompact) ...[
-              const SizedBox(height: iOS18Theme.spacing12),
+              ),
+              const SizedBox(height: 12),
               Text(
-                widget.description ?? 'Investment tracking widget',
-                style: iOS18Theme.footnote.copyWith(
-                  color: iOS18Theme.secondaryLabel.resolveFrom(context),
+                title,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
                 ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 4),
+              Text(
+                subtitle,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: CupertinoColors.systemGrey,
+                ),
+                textAlign: TextAlign.center,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
+              if (model != null || usage != null) ...[
+                const SizedBox(height: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: CupertinoColors.systemGrey6,
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (model != null) ...[
+                        Icon(
+                          CupertinoIcons.sparkles,
+                          size: 12,
+                          color: color,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          model!,
+                          style: TextStyle(
+                            fontSize: 10,
+                            color: CupertinoColors.systemGrey,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                      if (model != null && usage != null)
+                        const Text(
+                          ' • ',
+                          style: TextStyle(
+                            fontSize: 10,
+                            color: CupertinoColors.systemGrey3,
+                          ),
+                        ),
+                      if (usage != null)
+                        Text(
+                          usage!,
+                          style: TextStyle(
+                            fontSize: 10,
+                            color: CupertinoColors.systemGrey,
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ],
             ],
-          ],
+          ),
         ),
       ),
     );

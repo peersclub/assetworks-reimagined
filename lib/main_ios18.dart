@@ -1,39 +1,31 @@
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 // iOS 18 Theme and Services
-import 'core/theme/ios_theme.dart';
+import 'core/theme/ios_theme_system.dart';
 import 'services/dynamic_island_service.dart';
-import 'core/services/home_widget_service.dart';
+import 'services/home_widget_service.dart';
 import 'services/accessibility_service.dart';
 import 'services/performance_optimization_service.dart';
 import 'services/keyboard_navigation_service.dart';
 import 'services/dynamic_type_service.dart';
 
-// AssetWorks API and Services
-import 'data/services/api_service.dart';
-import 'core/services/storage_service.dart';
-import 'core/network/api_client.dart';
-
 // iOS 18 Screens
 import 'screens/splash_screen.dart';
-import 'screens/otp_login_screen.dart';
+import 'screens/login_screen.dart';
+import 'screens/register_screen.dart';
 import 'screens/otp_verification_screen.dart';
-import 'screens/main_screen.dart';
+import 'screens/forgot_password_screen.dart';
+import 'screens/main_tab_navigation.dart';
 import 'screens/dashboard_screen.dart';
-import 'screens/trending_screen.dart';
+import 'screens/discovery_screen.dart';
 import 'screens/create_widget_screen.dart';
-import 'screens/notifications_screen.dart';
 import 'screens/profile_screen.dart';
-import 'screens/search_screen.dart';
-import 'screens/widget_preview_screen.dart';
-import 'screens/prompt_history_screen.dart';
-import 'screens/onboarding_screen.dart';
 import 'screens/settings_screen.dart';
+import 'screens/onboarding_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -46,13 +38,7 @@ void main() async {
     await dotenv.load(fileName: ".env");
   } catch (e) {
     print('Could not load .env file: $e');
-    // Continue without env file - use defaults
   }
-  
-  // Initialize GetX services
-  Get.put(StorageService());
-  Get.put(ApiClient());
-  Get.put(ApiService());
   
   // Set preferred orientations
   await SystemChrome.setPreferredOrientations([
@@ -85,7 +71,7 @@ class AssetWorksReimagined extends StatelessWidget {
     return GetCupertinoApp(
       title: 'AssetWorks Reimagined',
       debugShowCheckedModeBanner: false,
-      theme: iOS18Theme.lightTheme,
+      theme: IOSThemeSystem.lightTheme,
       // Dark theme will be handled by the IOSThemeSystem
       localizationsDelegates: const [
         DefaultCupertinoLocalizations.delegate,
@@ -100,12 +86,22 @@ class AssetWorksReimagined extends StatelessWidget {
         ),
         GetPage(
           name: '/login',
-          page: () => const OtpLoginScreen(),
+          page: () => const LoginScreen(),
           transition: Transition.cupertino,
         ),
         GetPage(
-          name: '/otp-verify',
-          page: () => const OTPVerificationScreen(),
+          name: '/register',
+          page: () => const RegisterScreen(),
+          transition: Transition.cupertino,
+        ),
+        GetPage(
+          name: '/otp',
+          page: () => const OTPVerificationScreen(phoneNumber: ''),
+          transition: Transition.cupertino,
+        ),
+        GetPage(
+          name: '/forgot-password',
+          page: () => const ForgotPasswordScreen(),
           transition: Transition.cupertino,
         ),
         GetPage(
@@ -115,7 +111,7 @@ class AssetWorksReimagined extends StatelessWidget {
         ),
         GetPage(
           name: '/main',
-          page: () => const MainScreen(),
+          page: () => const MainTabNavigation(),
           transition: Transition.cupertino,
         ),
         GetPage(
@@ -124,38 +120,18 @@ class AssetWorksReimagined extends StatelessWidget {
           transition: Transition.cupertino,
         ),
         GetPage(
-          name: '/trending',
-          page: () => const TrendingScreen(),
+          name: '/discover',
+          page: () => const DiscoveryScreen(),
           transition: Transition.cupertino,
         ),
         GetPage(
-          name: '/create-widget',
+          name: '/create',
           page: () => const CreateWidgetScreen(),
-          transition: Transition.cupertino,
-        ),
-        GetPage(
-          name: '/notifications',
-          page: () => const NotificationsScreen(),
           transition: Transition.cupertino,
         ),
         GetPage(
           name: '/profile',
           page: () => const ProfileScreen(),
-          transition: Transition.cupertino,
-        ),
-        GetPage(
-          name: '/search',
-          page: () => const SearchScreen(),
-          transition: Transition.cupertino,
-        ),
-        GetPage(
-          name: '/widget-preview',
-          page: () => const WidgetPreviewScreen(),
-          transition: Transition.cupertino,
-        ),
-        GetPage(
-          name: '/prompt-history',
-          page: () => const PromptHistoryScreen(),
           transition: Transition.cupertino,
         ),
         GetPage(
