@@ -2,7 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import '../services/dynamic_island_service.dart';
-import '../data/services/api_service.dart';
+import '../services/api_service.dart';
 import '../core/services/storage_service.dart';
 
 class OTPVerificationScreen extends StatefulWidget {
@@ -84,13 +84,13 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
     
     try {
       final response = await _apiService.verifyOTP(
-        email: _email!,
-        otp: _otpCode,
+        _email!,
+        _otpCode,
       );
       
       setState(() => _isLoading = false);
       
-      if (response['success'] == true || response['token'] != null) {
+      if (response['success'] == true) {
         HapticFeedback.heavyImpact();
         
         DynamicIslandService().updateStatus(
@@ -120,7 +120,7 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
     HapticFeedback.lightImpact();
     
     try {
-      await _apiService.forgotPassword(_email!);
+      await _apiService.sendOTP(_email!);
       
       setState(() => _resendTimer = 30);
       _startResendTimer();

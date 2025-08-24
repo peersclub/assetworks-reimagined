@@ -2,7 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import '../services/dynamic_island_service.dart';
-import '../data/services/api_service.dart';
+import '../services/api_service.dart';
 
 class OtpLoginScreen extends StatefulWidget {
   const OtpLoginScreen({Key? key}) : super(key: key);
@@ -74,7 +74,7 @@ class _OtpLoginScreenState extends State<OtpLoginScreen>
     
     try {
       // Call API to send OTP
-      final response = await _apiService.forgotPassword(_emailController.text.trim());
+      final response = await _apiService.sendOTP(_emailController.text.trim());
       
       setState(() => _isLoading = false);
       
