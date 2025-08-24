@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import '../services/dynamic_island_service.dart';
 import '../services/api_service.dart';
+import '../services/biometric_service.dart';
 import '../core/services/storage_service.dart';
 
 class OTPVerificationScreen extends StatefulWidget {
@@ -24,6 +25,7 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
   
   final ApiService _apiService = Get.find<ApiService>();
   final StorageService _storageService = Get.find<StorageService>();
+  final BiometricService _biometricService = Get.find<BiometricService>();
   
   bool _isLoading = false;
   int _resendTimer = 30;
@@ -97,6 +99,14 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
           'Verification Successful!',
           icon: CupertinoIcons.checkmark_circle_fill,
         );
+        
+        // Update biometric credentials if enabled
+        if (response['data'] != null && response['data']['token'] != null) {
+          await _biometricService.updateCredentials(
+            response['data']['token'],
+            _email ?? '',
+          );
+        }
         
         if (_isSignup == true) {
           // Navigate to profile setup

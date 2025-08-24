@@ -1,8 +1,10 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
 import '../services/dynamic_island_service.dart';
 import '../services/api_service.dart';
+import '../services/biometric_service.dart';
 
 class OtpLoginScreen extends StatefulWidget {
   const OtpLoginScreen({Key? key}) : super(key: key);
@@ -15,6 +17,7 @@ class _OtpLoginScreenState extends State<OtpLoginScreen>
     with SingleTickerProviderStateMixin {
   final _emailController = TextEditingController();
   final ApiService _apiService = Get.find<ApiService>();
+  final BiometricService _biometricService = Get.put(BiometricService());
   
   bool _isLoading = false;
   bool _acceptedTerms = false;
@@ -39,6 +42,9 @@ class _OtpLoginScreenState extends State<OtpLoginScreen>
     ));
     
     _animationController.forward();
+    
+    // Check if should show biometric prompt
+    _checkBiometricLogin();
   }
   
   @override
@@ -46,6 +52,22 @@ class _OtpLoginScreenState extends State<OtpLoginScreen>
     _emailController.dispose();
     _animationController.dispose();
     super.dispose();
+  }
+  
+  Future<void> _checkBiometricLogin() async {
+    await Future.delayed(Duration(milliseconds: 500));
+    if (_biometricService.shouldShowBiometricPrompt()) {
+      _performBiometricLogin();
+    }
+  }
+  
+  Future<void> _performBiometricLogin() async {
+    final result = await _biometricService.biometricLogin();
+    if (result != null && result['success'] == true) {
+      // Store token and navigate to main
+      await Get.find<GetStorage>().write('auth_token', result['token']);
+      Get.offAllNamed('/main');
+    }
   }
   
   Future<void> _sendOTP() async {
