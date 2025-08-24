@@ -23,6 +23,25 @@ dependencies:
   flutter_svg: ^2.0.7
   shimmer: ^3.0.0
   carousel_slider: ^5.0.0
+  font_awesome_flutter: ^10.7.0
+  
+  # iOS 18 Design System
+  flutter_platform_widgets: ^7.0.0
+  modal_bottom_sheet: ^3.0.0
+  cupertino_icons: ^1.0.6
+  
+  # Home Widget & Dynamic Island
+  home_widget: ^0.6.0
+  
+  # iOS Features
+  quick_actions: ^1.0.7
+  
+  # Enhanced Animations
+  lottie: ^3.1.0
+  spring: ^2.0.2
+  
+  # iOS Style Charts
+  fl_chart: ^0.66.0
   
   # Storage
   get_storage: ^2.1.1
@@ -73,7 +92,6 @@ dependencies:
   cached_network_image: ^3.4.1
   flutter_cache_manager: ^3.4.1
   country_flags: ^3.3.0
-  font_awesome_flutter: ^10.9.1
 
 dev_dependencies:
   flutter_test:
