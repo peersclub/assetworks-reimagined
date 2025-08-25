@@ -8,7 +8,7 @@ import '../services/api_service.dart';
 import '../models/dashboard_widget.dart';
 import '../widgets/widget_card_final.dart';
 import '../screens/widget_preview_screen.dart';
-import '../screens/widget_creator_final_screen.dart';
+import '../screens/investment_widget_creator_screen.dart';
 import '../screens/pro_analytics_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -241,7 +241,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         break;
         
       case 'remix':
-        Get.to(() => WidgetCreatorFinalScreen(
+        Get.to(() => InvestmentWidgetCreatorScreen(
           remixWidget: widget,
           isRemixMode: true,
         ), 
@@ -436,8 +436,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ),
                     const SizedBox(height: 24),
                     CupertinoButton.filled(
-                      onPressed: () => Get.toNamed('/create-widget'),
-                      child: const Text('Create Widget'),
+                      onPressed: () => Get.to(() => const InvestmentWidgetCreatorScreen(),
+                        transition: Transition.cupertino,
+                      ),
+                      child: const Text('Create Investment Widget'),
                     ),
                   ],
                 ),
