@@ -4,7 +4,7 @@ import 'package:get/get.dart';
 import 'dashboard_screen.dart';
 import 'dashboard_v2_screen.dart';
 import 'explore_screen.dart';
-import 'widget_creator_screen.dart';
+import 'widget_creator_final_screen.dart';
 import 'notifications_screen.dart';
 import 'profile_screen.dart';
 import 'ai_assistant_screen.dart';
@@ -25,7 +25,7 @@ class _MainScreenState extends State<MainScreen> {
   final List<Widget> _screens = [
     const DashboardScreen(),
     const ExploreScreen(),
-    const WidgetCreatorScreen(),
+    const WidgetCreatorFinalScreen(),
     const NotificationsScreen(),
     const ProfileScreen(),
   ];
