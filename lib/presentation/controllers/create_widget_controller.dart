@@ -2,6 +2,7 @@ import 'package:get/get.dart';
 import 'dart:io';
 import '../../services/api_service.dart';
 import '../../core/utils/storage_helper.dart';
+import '../../core/network/api_client.dart';
 
 enum WidgetType {
   chart,
@@ -13,6 +14,7 @@ enum WidgetType {
 
 class CreateWidgetController extends GetxController {
   final _apiService = ApiService();
+  final _apiClient = ApiClient();
   
   // Observable states
   final isCreating = false.obs;
@@ -43,50 +45,55 @@ class CreateWidgetController extends GetxController {
     try {
       isCreating.value = true;
       
-      // Prepare widget config
-      final config = {
-        'prompt': prompt,
-        'type': selectedType.value.toString().split('.').last,
-        'settings': {
-          'realTimeData': useRealTimeData.value,
-          'interactive': isInteractive.value,
-          'public': isPublic.value,
-          'apiEnabled': enableAPI.value,
-        },
-      };
+      // Build full prompt with title and description
+      String fullPrompt = prompt;
+      if (title.isNotEmpty) {
+        fullPrompt = "Title: $title\n$prompt";
+      }
+      if (description != null && description.isNotEmpty) {
+        fullPrompt += "\nDescription: $description";
+      }
       
-      // Call API to create widget
-      final widget = await _apiService.createWidget(
-        title: title,
-        description: description ?? '',
-        config: config,
-        tags: ['ai-generated'],
-        thumbnail: attachments?.isNotEmpty == true ? attachments!.first : null,
-      );
+      // Add widget type to prompt
+      fullPrompt += "\nWidget Type: ${selectedType.value.toString().split('.').last}";
       
-      // Save to history
-      final widgetData = {
-        'id': widget.id,
-        'title': title,
-        'description': description ?? '',
-        'prompt': prompt,
-        'type': selectedType.value.toString().split('.').last,
-      };
-      await saveToHistory(widgetData);
+      // Call API to create widget from prompt
+      final response = await _apiService.createWidgetFromPrompt(fullPrompt);
       
-      Get.snackbar(
-        'Success',
-        'Widget created successfully!',
-        snackPosition: SnackPosition.BOTTOM,
-      );
-      
-      // Navigate to widget view
-      Get.toNamed('/widget-view', arguments: widget.toJson());
+      if (response['success'] == true) {
+        final widgetData = response['data'] ?? response;
+        
+        // Save to history
+        final historyData = {
+          'id': widgetData['id'] ?? DateTime.now().millisecondsSinceEpoch.toString(),
+          'title': title,
+          'description': description ?? '',
+          'prompt': prompt,
+          'type': selectedType.value.toString().split('.').last,
+          'createdAt': DateTime.now().toIso8601String(),
+        };
+        await saveToHistory(historyData);
+        
+        Get.snackbar(
+          'Success',
+          'Widget created successfully!',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Get.theme.colorScheme.primary.withOpacity(0.1),
+          colorText: Get.theme.colorScheme.primary,
+        );
+        
+        // Navigate to widget view
+        Get.toNamed('/widget-view', arguments: widgetData);
+      } else {
+        throw Exception(response['message'] ?? 'Failed to create widget');
+      }
     } catch (e) {
       Get.snackbar(
         'Error',
         'Failed to create widget: ${e.toString()}',
         snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Get.theme.colorScheme.error.withOpacity(0.1),
+        colorText: Get.theme.colorScheme.error,
       );
     } finally {
       isCreating.value = false;
@@ -97,22 +104,86 @@ class CreateWidgetController extends GetxController {
     try {
       isLoading.value = true;
       
-      // For now, return a mock template
-      // TODO: Implement API endpoint for templates
-      final template = {
-        'title': 'Template Widget',
-        'description': 'Generated from template',
-        'prompt': 'Template prompt',
-        'type': 'chart',
-      };
+      // Fetch all templates and find the one with matching ID
+      final response = await _apiClient.getWidgetTemplates();
       
-      // Return template data to populate form
-      Get.back(result: template);
+      if (response.statusCode == 200) {
+        final templates = response.data['data'] ?? response.data['templates'] ?? [];
+        
+        // Find the template with matching ID
+        Map<String, dynamic>? templateData;
+        for (var t in templates) {
+          if (t['id'] == templateId || t['_id'] == templateId) {
+            templateData = t;
+            break;
+          }
+        }
+        
+        if (templateData != null) {
+          // Track template usage
+          try {
+            await _apiClient.trackTemplateUsage(templateId);
+          } catch (e) {
+            print('Error tracking template usage: $e');
+          }
+          
+          // Prepare template data for form population
+          final template = {
+            'title': templateData['title'] ?? 'Template Widget',
+            'description': templateData['description'] ?? '',
+            'prompt': templateData['prompt'] ?? templateData['basePrompt'] ?? '',
+            'type': templateData['type'] ?? 'chart',
+            'category': templateData['category'] ?? 'Custom',
+            'tags': templateData['tags'] ?? [],
+          };
+          
+          // Return template data to populate form
+          Get.back(result: template);
+        } else {
+          // Template not found, try to fetch directly if API supports it
+          try {
+            final directResponse = await _apiClient.dio.get(
+              '/api/v1/widgets/templates/$templateId',
+            );
+            
+            if (directResponse.statusCode == 200) {
+              final templateData = directResponse.data['data'] ?? directResponse.data;
+              
+              // Track template usage
+              try {
+                await _apiClient.trackTemplateUsage(templateId);
+              } catch (e) {
+                print('Error tracking template usage: $e');
+              }
+              
+              final template = {
+                'title': templateData['title'] ?? 'Template Widget',
+                'description': templateData['description'] ?? '',
+                'prompt': templateData['prompt'] ?? templateData['basePrompt'] ?? '',
+                'type': templateData['type'] ?? 'chart',
+                'category': templateData['category'] ?? 'Custom',
+                'tags': templateData['tags'] ?? [],
+              };
+              
+              Get.back(result: template);
+            } else {
+              throw Exception('Template not found');
+            }
+          } catch (e) {
+            // If direct fetch fails, show error
+            throw Exception('Template not found');
+          }
+        }
+      } else {
+        throw Exception('Failed to fetch templates');
+      }
     } catch (e) {
       Get.snackbar(
         'Error',
         'Failed to load template: ${e.toString()}',
         snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Get.theme.colorScheme.error.withOpacity(0.1),
+        colorText: Get.theme.colorScheme.error,
       );
     } finally {
       isLoading.value = false;

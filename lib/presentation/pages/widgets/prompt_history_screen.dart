@@ -381,14 +381,64 @@ class _PromptHistoryScreenState extends State<PromptHistoryScreen> {
     }
   }
   
-  void _viewWidget(Map<String, dynamic> item) {
-    // Navigate to widget view
-    // TODO: Load widget by ID from API
-    Get.snackbar(
-      'View Widget',
-      'Loading widget...',
-      snackPosition: SnackPosition.BOTTOM,
+  void _viewWidget(Map<String, dynamic> item) async {
+    final widgetId = item['widget_id'] ?? item['widgetId'];
+    
+    if (widgetId == null) {
+      Get.snackbar(
+        'Error',
+        'Widget ID not found',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red.withOpacity(0.1),
+        colorText: Colors.red,
+      );
+      return;
+    }
+    
+    // Show loading indicator
+    Get.dialog(
+      const Center(
+        child: CircularProgressIndicator(),
+      ),
+      barrierDismissible: false,
     );
+    
+    try {
+      // Fetch widget by ID using the API
+      final widget = await _controller.getWidgetById(widgetId);
+      
+      // Dismiss loading dialog
+      Get.back();
+      
+      if (widget != null) {
+        // Navigate to widget view screen with the fetched widget
+        Get.toNamed('/widget-view', arguments: {
+          'widget': widget,
+          'fromHistory': true,
+        });
+      } else {
+        Get.snackbar(
+          'Error',
+          'Widget not found',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.red.withOpacity(0.1),
+          colorText: Colors.red,
+        );
+      }
+    } catch (e) {
+      // Dismiss loading dialog if still showing
+      if (Get.isDialogOpen ?? false) {
+        Get.back();
+      }
+      
+      Get.snackbar(
+        'Error',
+        'Failed to load widget: ${e.toString()}',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red.withOpacity(0.1),
+        colorText: Colors.red,
+      );
+    }
   }
   
   void _continueConversation(Map<String, dynamic> item) {

@@ -60,10 +60,14 @@ class TemplateController extends GetxController {
           templates.value = [...FinanceTemplates.templates, ...apiTemplates];
         } else {
           // If no API templates, use hardcoded finance templates
+          print('[TemplateController] No templates returned from API, using fallback finance templates');
+          _logTemplateFallback('No API templates available');
           templates.value = FinanceTemplates.templates;
         }
       } else {
         // If API fails, use hardcoded finance templates
+        print('[TemplateController] API request failed with status: ${response.statusCode}, using fallback templates');
+        _logTemplateFallback('API request failed: Status ${response.statusCode}');
         templates.value = FinanceTemplates.templates;
       }
       
@@ -74,9 +78,23 @@ class TemplateController extends GetxController {
       _loadRecentTemplates();
       
     } catch (e) {
-      print('Error loading templates: $e');
+      print('[TemplateController] Error loading templates: $e');
+      print('[TemplateController] Stack trace: ${StackTrace.current}');
+      _logTemplateFallback('Exception: ${e.toString()}');
       // Load offline templates as fallback
       templates.value = FinanceTemplates.templates;
+      
+      // Show user-friendly notification about fallback
+      if (Get.isSnackbarOpen != true) {
+        Get.snackbar(
+          'Offline Mode',
+          'Using cached templates. Some templates may not be available.',
+          snackPosition: SnackPosition.BOTTOM,
+          duration: const Duration(seconds: 3),
+          backgroundColor: Get.theme.colorScheme.surface,
+          colorText: Get.theme.colorScheme.onSurface,
+        );
+      }
     } finally {
       isLoading.value = false;
     }
@@ -169,6 +187,31 @@ class TemplateController extends GetxController {
         return 58; // LucideIcons.trendingUp code
       default:
         return 59; // LucideIcons.layout code
+    }
+  }
+  
+  void _logTemplateFallback(String reason) {
+    // Log template fallback event for monitoring
+    final fallbackEvent = {
+      'timestamp': DateTime.now().toIso8601String(),
+      'reason': reason,
+      'templatesLoaded': templates.length,
+      'networkAvailable': Get.isSnackbarOpen != null, // Simple network check
+    };
+    
+    // Save to local storage for debugging/analytics
+    try {
+      final fallbackLogs = StorageHelper.getList('template_fallback_logs') ?? [];
+      fallbackLogs.add(fallbackEvent);
+      
+      // Keep only last 50 logs
+      if (fallbackLogs.length > 50) {
+        fallbackLogs.removeRange(0, fallbackLogs.length - 50);
+      }
+      
+      StorageHelper.saveList('template_fallback_logs', fallbackLogs);
+    } catch (e) {
+      print('[TemplateController] Error logging fallback: $e');
     }
   }
 }
