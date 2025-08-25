@@ -3,10 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:webview_flutter/webview_flutter.dart';
+import 'dart:math';
 import '../services/api_service.dart';
 import '../services/dynamic_island_service.dart';
 import '../models/dashboard_widget.dart';
 import '../screens/widget_preview_screen.dart';
+import '../screens/user_profile_screen.dart';
+import '../screens/investment_widget_creator_screen.dart';
 
 class DashboardV2Screen extends StatefulWidget {
   const DashboardV2Screen({Key? key}) : super(key: key);

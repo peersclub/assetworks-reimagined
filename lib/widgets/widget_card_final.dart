@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'dart:math';
 import '../models/dashboard_widget.dart';
 import '../services/api_service.dart';
 import '../services/dynamic_island_service.dart';
@@ -237,7 +238,7 @@ class _WidgetCardFinalState extends State<WidgetCardFinal> {
               
               const SizedBox(height: 12),
               
-              // Stats and Actions Row
+              // Actions Row (No stats on left, only actions on right)
               Container(
                 padding: EdgeInsets.only(top: 12),
                 decoration: BoxDecoration(
@@ -249,63 +250,38 @@ class _WidgetCardFinalState extends State<WidgetCardFinal> {
                   ),
                 ),
                 child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  mainAxisAlignment: MainAxisAlignment.end,
                   children: [
-                    // Stats Section (Compact)
-                    Row(
-                      children: [
-                        _buildCompactStat(
-                          CupertinoIcons.eye,
-                          _formatCount(widget.widget.views_count ?? 0),
-                        ),
-                        const SizedBox(width: 16),
-                        _buildCompactStat(
-                          CupertinoIcons.heart,
-                          _formatCount(widget.widget.likes_count ?? 0),
-                        ),
-                        const SizedBox(width: 16),
-                        _buildCompactStat(
-                          CupertinoIcons.bubble_left,
-                          _formatCount(widget.widget.comments_count ?? 0),
-                        ),
-                      ],
+                    _buildActionButton(
+                      icon: widget.widget.like 
+                          ? CupertinoIcons.heart_fill
+                          : CupertinoIcons.heart,
+                      color: widget.widget.like
+                          ? CupertinoColors.systemRed
+                          : CupertinoColors.systemGrey3,
+                      onTap: () => _handleLikeAction(),
                     ),
-                    
-                    // Action Buttons
-                    Row(
-                      children: [
-                        _buildActionButton(
-                          icon: widget.widget.like 
-                              ? CupertinoIcons.heart_fill
-                              : CupertinoIcons.heart,
-                          color: widget.widget.like
-                              ? CupertinoColors.systemRed
-                              : CupertinoColors.systemGrey3,
-                          onTap: () => _handleLikeAction(),
-                        ),
-                        const SizedBox(width: 12),
-                        _buildActionButton(
-                          icon: widget.widget.save
-                              ? CupertinoIcons.bookmark_fill
-                              : CupertinoIcons.bookmark,
-                          color: widget.widget.save
-                              ? Color(0xFF6366F1)
-                              : CupertinoColors.systemGrey3,
-                          onTap: () => _handleSaveAction(),
-                        ),
-                        const SizedBox(width: 12),
-                        _buildActionButton(
-                          icon: CupertinoIcons.arrow_2_squarepath,
-                          color: CupertinoColors.systemGrey3,
-                          onTap: () => widget.onAction('remix'),
-                        ),
-                        const SizedBox(width: 12),
-                        _buildActionButton(
-                          icon: CupertinoIcons.share,
-                          color: CupertinoColors.systemGrey3,
-                          onTap: () => widget.onAction('share'),
-                        ),
-                      ],
+                    const SizedBox(width: 12),
+                    _buildActionButton(
+                      icon: widget.widget.save
+                          ? CupertinoIcons.add_circled_solid
+                          : CupertinoIcons.add_circled,
+                      color: widget.widget.save
+                          ? Color(0xFF6366F1)
+                          : CupertinoColors.systemGrey3,
+                      onTap: () => _handleAddToDashboard(),
+                    ),
+                    const SizedBox(width: 12),
+                    _buildActionButton(
+                      icon: CupertinoIcons.arrow_2_squarepath,
+                      color: CupertinoColors.systemGrey3,
+                      onTap: () => widget.onAction('remix'),
+                    ),
+                    const SizedBox(width: 12),
+                    _buildActionButton(
+                      icon: CupertinoIcons.share,
+                      color: CupertinoColors.systemGrey3,
+                      onTap: () => _handleShareAction(),
                     ),
                   ],
                 ),
@@ -317,11 +293,19 @@ class _WidgetCardFinalState extends State<WidgetCardFinal> {
     );
   }
   
-  String _getUserInitial() {
+  String _getUserInitials() {
     if (widget.widget.username != null && widget.widget.username!.isNotEmpty) {
-      return widget.widget.username!.substring(0, 1).toUpperCase();
+      final parts = widget.widget.username!.split(' ');
+      if (parts.length >= 2) {
+        return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
+      }
+      return widget.widget.username!.substring(0, min(2, widget.widget.username!.length)).toUpperCase();
     }
-    return 'A';
+    return 'AN';
+  }
+  
+  String _getUserInitial() {
+    return _getUserInitials();
   }
   
   String _formatCount(int count) {
@@ -418,10 +402,12 @@ class _WidgetCardFinalState extends State<WidgetCardFinal> {
     }
   }
   
-  Future<void> _handleSaveAction() async {
+  Future<void> _handleAddToDashboard() async {
     HapticFeedback.lightImpact();
     
-    final success = await _apiService.saveWidgetToProfile(widget.widget.id);
+    final success = widget.widget.save
+        ? await _apiService.removeWidgetFromDashboard(widget.widget.id)
+        : await _apiService.addWidgetToDashboard(widget.widget.id);
     
     if (success) {
       setState(() {
@@ -429,11 +415,65 @@ class _WidgetCardFinalState extends State<WidgetCardFinal> {
       });
       
       DynamicIslandService().updateStatus(
-        widget.widget.save ? 'Saved!' : 'Removed',
+        widget.widget.save ? 'Added to Dashboard!' : 'Removed from Dashboard',
         icon: widget.widget.save 
-            ? CupertinoIcons.bookmark_fill
-            : CupertinoIcons.bookmark,
+            ? CupertinoIcons.add_circled_solid
+            : CupertinoIcons.minus_circled,
       );
     }
+  }
+  
+  Future<void> _handleShareAction() async {
+    HapticFeedback.lightImpact();
+    
+    final shareUrl = 'https://assetworks.ai/widget/${widget.widget.id}';
+    final shareText = '${widget.widget.title ?? "Check out this widget"} by @${widget.widget.username ?? "anonymous"}\n\nCreated with AssetWorks AI\n$shareUrl';
+    
+    // Show share sheet
+    showCupertinoModalPopup(
+      context: context,
+      builder: (context) => CupertinoActionSheet(
+        title: const Text('Share Widget'),
+        message: Text(widget.widget.title ?? 'Investment Widget'),
+        actions: [
+          CupertinoActionSheetAction(
+            onPressed: () {
+              Navigator.pop(context);
+              // Copy link to clipboard
+              Clipboard.setData(ClipboardData(text: shareUrl));
+              DynamicIslandService().updateStatus(
+                'Link copied!',
+                icon: CupertinoIcons.doc_on_clipboard_fill,
+              );
+            },
+            child: const Text('Copy Link'),
+          ),
+          CupertinoActionSheetAction(
+            onPressed: () {
+              Navigator.pop(context);
+              // Copy full text
+              Clipboard.setData(ClipboardData(text: shareText));
+              DynamicIslandService().updateStatus(
+                'Copied to clipboard!',
+                icon: CupertinoIcons.doc_on_clipboard_fill,
+              );
+            },
+            child: const Text('Copy Text'),
+          ),
+          CupertinoActionSheetAction(
+            onPressed: () {
+              Navigator.pop(context);
+              widget.onAction('share');
+            },
+            child: const Text('More Options'),
+          ),
+        ],
+        cancelButton: CupertinoActionSheetAction(
+          isDefaultAction: true,
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancel'),
+        ),
+      ),
+    );
   }
 }

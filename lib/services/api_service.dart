@@ -581,6 +581,28 @@ class ApiService extends getx.GetxService {
     }
   }
   
+  Future<bool> addWidgetToDashboard(String widgetId) async {
+    try {
+      final response = await _dio.post('/api/v1/dashboard/add',
+        data: {'widget_id': widgetId}
+      );
+      return response.statusCode == 200 || response.statusCode == 201;
+    } catch (e) {
+      print('Error adding widget to dashboard: $e');
+      return false;
+    }
+  }
+  
+  Future<bool> removeWidgetFromDashboard(String widgetId) async {
+    try {
+      final response = await _dio.delete('/api/v1/dashboard/remove/$widgetId');
+      return response.statusCode == 200 || response.statusCode == 204;
+    } catch (e) {
+      print('Error removing widget from dashboard: $e');
+      return false;
+    }
+  }
+  
   Future<UserProfile> fetchUserProfile(String userId) async {
     try {
       final response = await _dio.get('/api/v1/users/$userId');
