@@ -42,7 +42,7 @@ import UserNotifications
   }
   
   private func setupPushNotifications(_ application: UIApplication) {
-    // Initialize Firebase if not already initialized by Flutter plugin
+    // Configure Firebase
     if FirebaseApp.app() == nil {
       FirebaseApp.configure()
     }
