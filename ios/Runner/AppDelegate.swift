@@ -31,23 +31,28 @@ import UserNotifications
     )
     
     dynamicIslandChannel.setMethodCallHandler { [weak self] (call: FlutterMethodCall, result: @escaping FlutterResult) in
-      // Dynamic Island implementation pending Xcode project configuration
-      result(FlutterError(code: "NOT_IMPLEMENTED", message: "Dynamic Island pending native setup", details: nil))
+      // Check iOS version for Dynamic Island support
+      if #available(iOS 16.1, *) {
+        DynamicIslandManager.shared.handleMethodCall(call, result: result)
+      } else {
+        // Fallback for older iOS versions
+        result(FlutterError(code: "UNSUPPORTED", message: "Dynamic Island requires iOS 16.1+", details: nil))
+      }
     }
   }
   
   private func setupPushNotifications(_ application: UIApplication) {
-    // Initialize Firebase (commented out - may be initialized by Flutter plugin)
-    // if FirebaseApp.app() == nil {
-    //   FirebaseApp.configure()
-    // }
+    // Initialize Firebase if not already initialized by Flutter plugin
+    if FirebaseApp.app() == nil {
+      FirebaseApp.configure()
+    }
     
     // Setup messaging delegate
     Messaging.messaging().delegate = self
     
-    // Register for notifications - implementation pending
-    // NotificationService.shared.registerForPushNotifications()
-    // NotificationService.shared.setupNotificationCategories()
+    // Register for notifications
+    NotificationService.shared.registerForPushNotifications()
+    NotificationService.shared.setupNotificationCategories()
     
     // Setup notification channel for Flutter
     setupNotificationChannel()
@@ -83,6 +88,6 @@ extension AppDelegate: MessagingDelegate {
   func messaging(_ messaging: Messaging, didReceiveRegistrationToken fcmToken: String?) {
     guard let token = fcmToken else { return }
     print("FCM Token: \(token)")
-    // NotificationService.shared.handleFCMToken(token) - pending native setup
+    NotificationService.shared.handleFCMToken(token)
   }
 }

@@ -2,6 +2,7 @@ import Foundation
 import UserNotifications
 import Firebase
 import FirebaseMessaging
+import Flutter
 
 class NotificationService: NSObject {
     static let shared = NotificationService()

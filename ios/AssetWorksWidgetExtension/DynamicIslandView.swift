@@ -163,28 +163,46 @@ struct AssetWorksHomeWidget: Widget {
 
 // MARK: - Widget Provider
 struct WidgetProvider: TimelineProvider {
+    // App Group identifier for data sharing
+    let appGroupId = "group.com.assetworks.widgets"
+    
     func placeholder(in context: Context) -> SimpleEntry {
-        SimpleEntry(date: Date(), widgetCount: 0, latestWidget: nil)
+        SimpleEntry(date: Date(), widgetCount: 0, latestWidget: nil, savedWidgets: 0, createdToday: 0)
     }
     
     func getSnapshot(in context: Context, completion: @escaping (SimpleEntry) -> ()) {
-        let entry = SimpleEntry(date: Date(), widgetCount: 5, latestWidget: "My Cool Widget")
+        let entry = loadWidgetData() ?? SimpleEntry(date: Date(), widgetCount: 5, latestWidget: "My Cool Widget", savedWidgets: 3, createdToday: 1)
         completion(entry)
     }
     
     func getTimeline(in context: Context, completion: @escaping (Timeline<Entry>) -> ()) {
         var entries: [SimpleEntry] = []
         
-        // Generate timeline entries
-        let currentDate = Date()
-        for hourOffset in 0 ..< 5 {
-            let entryDate = Calendar.current.date(byAdding: .hour, value: hourOffset, to: currentDate)!
-            let entry = SimpleEntry(date: entryDate, widgetCount: 5 + hourOffset, latestWidget: "Widget #\(hourOffset)")
-            entries.append(entry)
-        }
+        // Load current data from shared container
+        let currentEntry = loadWidgetData() ?? SimpleEntry(date: Date(), widgetCount: 0, latestWidget: nil, savedWidgets: 0, createdToday: 0)
+        entries.append(currentEntry)
         
-        let timeline = Timeline(entries: entries, policy: .atEnd)
+        // Refresh every 30 minutes
+        let nextUpdate = Calendar.current.date(byAdding: .minute, value: 30, to: Date())!
+        let timeline = Timeline(entries: entries, policy: .after(nextUpdate))
         completion(timeline)
+    }
+    
+    private func loadWidgetData() -> SimpleEntry? {
+        guard let userDefaults = UserDefaults(suiteName: appGroupId) else { return nil }
+        
+        let totalWidgets = userDefaults.integer(forKey: "totalWidgets")
+        let savedWidgets = userDefaults.integer(forKey: "savedWidgets")
+        let createdToday = userDefaults.integer(forKey: "createdToday")
+        let latestWidget = userDefaults.string(forKey: "latestWidget")
+        
+        return SimpleEntry(
+            date: Date(),
+            widgetCount: totalWidgets,
+            latestWidget: latestWidget,
+            savedWidgets: savedWidgets,
+            createdToday: createdToday
+        )
     }
 }
 
@@ -192,28 +210,114 @@ struct SimpleEntry: TimelineEntry {
     let date: Date
     let widgetCount: Int
     let latestWidget: String?
+    let savedWidgets: Int
+    let createdToday: Int
 }
 
 struct WidgetEntryView: View {
+    @Environment(\.widgetFamily) var widgetFamily
     var entry: WidgetProvider.Entry
+    
+    var body: some View {
+        switch widgetFamily {
+        case .systemSmall:
+            SmallWidgetView(entry: entry)
+        case .systemMedium:
+            MediumWidgetView(entry: entry)
+        case .systemLarge:
+            LargeWidgetView(entry: entry)
+        default:
+            SmallWidgetView(entry: entry)
+        }
+    }
+}
+
+// MARK: - Small Widget View
+struct SmallWidgetView: View {
+    let entry: WidgetProvider.Entry
     
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
                 Image(systemName: "sparkles")
                     .foregroundColor(.yellow)
-                Text("AssetWorks")
-                    .font(.headline)
+                    .font(.title3)
+                Spacer()
             }
             
-            Text("\(entry.widgetCount) Widgets")
+            Text("\(entry.widgetCount)")
                 .font(.largeTitle)
                 .bold()
             
-            if let latest = entry.latestWidget {
-                Text("Latest: \(latest)")
+            Text("Total Widgets")
+                .font(.caption)
+                .foregroundColor(.secondary)
+            
+            Spacer()
+            
+            if entry.createdToday > 0 {
+                HStack(spacing: 4) {
+                    Image(systemName: "plus.circle.fill")
+                        .font(.caption2)
+                        .foregroundColor(.green)
+                    Text("\(entry.createdToday) today")
+                        .font(.caption2)
+                        .foregroundColor(.green)
+                }
+            }
+        }
+        .padding()
+        .containerBackground(for: .widget) {
+            LinearGradient(
+                colors: [Color.blue.opacity(0.1), Color.purple.opacity(0.1)],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        }
+        .widgetURL(URL(string: "assetworks://dashboard"))
+    }
+}
+
+// MARK: - Medium Widget View
+struct MediumWidgetView: View {
+    let entry: WidgetProvider.Entry
+    
+    var body: some View {
+        HStack(spacing: 16) {
+            // Left side - Main stats
+            VStack(alignment: .leading, spacing: 8) {
+                HStack {
+                    Image(systemName: "sparkles")
+                        .foregroundColor(.yellow)
+                    Text("AssetWorks")
+                        .font(.headline)
+                }
+                
+                Spacer()
+                
+                Text("\(entry.widgetCount)")
+                    .font(.largeTitle)
+                    .bold()
+                Text("Total Widgets")
                     .font(.caption)
                     .foregroundColor(.secondary)
+            }
+            
+            // Right side - Additional stats
+            VStack(alignment: .leading, spacing: 12) {
+                StatRow(icon: "bookmark.fill", value: "\(entry.savedWidgets)", label: "Saved")
+                StatRow(icon: "plus.circle.fill", value: "\(entry.createdToday)", label: "Today")
+                
+                if let latest = entry.latestWidget {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Latest")
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                        Text(latest)
+                            .font(.caption)
+                            .lineLimit(1)
+                    }
+                }
             }
             
             Spacer()
@@ -226,5 +330,142 @@ struct WidgetEntryView: View {
                 endPoint: .bottomTrailing
             )
         }
+        .widgetURL(URL(string: "assetworks://dashboard"))
+    }
+}
+
+// MARK: - Large Widget View
+struct LargeWidgetView: View {
+    let entry: WidgetProvider.Entry
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            // Header
+            HStack {
+                Image(systemName: "sparkles")
+                    .foregroundColor(.yellow)
+                    .font(.title2)
+                Text("AssetWorks")
+                    .font(.title2)
+                    .bold()
+                Spacer()
+                Text(entry.date, style: .time)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+            
+            // Main stats
+            HStack(spacing: 20) {
+                StatCard(
+                    title: "Total",
+                    value: "\(entry.widgetCount)",
+                    icon: "square.grid.2x2.fill",
+                    color: .blue
+                )
+                
+                StatCard(
+                    title: "Saved",
+                    value: "\(entry.savedWidgets)",
+                    icon: "bookmark.fill",
+                    color: .orange
+                )
+                
+                StatCard(
+                    title: "Today",
+                    value: "\(entry.createdToday)",
+                    icon: "plus.circle.fill",
+                    color: .green
+                )
+            }
+            
+            Divider()
+            
+            // Latest widget
+            if let latest = entry.latestWidget {
+                VStack(alignment: .leading, spacing: 4) {
+                    Label("Latest Widget", systemImage: "clock.fill")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    Text(latest)
+                        .font(.headline)
+                        .lineLimit(2)
+                }
+            }
+            
+            Spacer()
+            
+            // Quick actions
+            HStack(spacing: 12) {
+                Link(destination: URL(string: "assetworks://create")!) {
+                    Label("Create", systemImage: "plus")
+                        .font(.caption)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+                        .background(Color.blue.opacity(0.2))
+                        .cornerRadius(8)
+                }
+                
+                Link(destination: URL(string: "assetworks://dashboard")!) {
+                    Label("Dashboard", systemImage: "square.grid.2x2")
+                        .font(.caption)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+                        .background(Color.purple.opacity(0.2))
+                        .cornerRadius(8)
+                }
+            }
+        }
+        .padding()
+        .containerBackground(for: .widget) {
+            LinearGradient(
+                colors: [Color.blue.opacity(0.1), Color.purple.opacity(0.1)],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        }
+    }
+}
+
+// MARK: - Helper Views
+struct StatRow: View {
+    let icon: String
+    let value: String
+    let label: String
+    
+    var body: some View {
+        HStack(spacing: 8) {
+            Image(systemName: icon)
+                .font(.caption)
+                .foregroundColor(.blue)
+            VStack(alignment: .leading, spacing: 0) {
+                Text(value)
+                    .font(.headline)
+                Text(label)
+                    .font(.caption2)
+                    .foregroundColor(.secondary)
+            }
+        }
+    }
+}
+
+struct StatCard: View {
+    let title: String
+    let value: String
+    let icon: String
+    let color: Color
+    
+    var body: some View {
+        VStack(spacing: 4) {
+            Image(systemName: icon)
+                .font(.title3)
+                .foregroundColor(color)
+            Text(value)
+                .font(.title2)
+                .bold()
+            Text(title)
+                .font(.caption)
+                .foregroundColor(.secondary)
+        }
+        .frame(maxWidth: .infinity)
     }
 }

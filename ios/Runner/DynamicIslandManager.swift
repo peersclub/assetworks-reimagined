@@ -3,19 +3,6 @@ import ActivityKit
 import SwiftUI
 import WidgetKit
 
-// MARK: - Activity Attributes
-struct WidgetCreationAttributes: ActivityAttributes {
-    public struct ContentState: Codable, Hashable {
-        var status: String
-        var progress: Double
-        var icon: String
-        var color: String
-    }
-    
-    var widgetTitle: String
-    var username: String
-}
-
 // MARK: - Dynamic Island Manager
 @available(iOS 16.1, *)
 class DynamicIslandManager: NSObject {
@@ -169,6 +156,88 @@ extension DynamicIslandManager {
         case "clear":
             clearAllActivities()
             result(true)
+            
+        case "startWidgetCreation":
+            if let prompt = args["prompt"] as? String {
+                let widgetType = args["widgetType"] as? String ?? "custom"
+                let username = UserDefaults.standard.string(forKey: "username") ?? "User"
+                
+                startActivity(
+                    title: widgetType.capitalized + " Widget",
+                    username: username,
+                    status: "Analyzing prompt...",
+                    progress: 0.1
+                )
+                result(true)
+            } else {
+                result(FlutterError(code: "MISSING_PROMPT", message: "Prompt is required", details: nil))
+            }
+            
+        case "updateWidgetCreation":
+            if let stage = args["stage"] as? String,
+               let progress = args["progress"] as? Double {
+                let detail = args["detail"] as? String
+                
+                var status: String
+                var icon: String
+                
+                switch stage {
+                case "analyzing":
+                    status = detail ?? "Analyzing your request..."
+                    icon = "waveform"
+                case "generating":
+                    status = detail ?? "Generating widget..."
+                    icon = "sparkles"
+                case "optimizing":
+                    status = detail ?? "Optimizing design..."
+                    icon = "paintbrush.fill"
+                case "finalizing":
+                    status = detail ?? "Finalizing widget..."
+                    icon = "checkmark.circle"
+                case "complete":
+                    status = detail ?? "Widget created!"
+                    icon = "checkmark.circle.fill"
+                default:
+                    status = detail ?? "Processing..."
+                    icon = "gear"
+                }
+                
+                updateActivity(status: status, progress: progress, icon: icon)
+                result(true)
+            } else {
+                result(FlutterError(code: "MISSING_DATA", message: "Stage and progress required", details: nil))
+            }
+            
+        case "completeWidgetCreation":
+            if let widgetTitle = args["widgetTitle"] as? String,
+               let success = args["success"] as? Bool {
+                let errorMessage = args["errorMessage"] as? String
+                
+                let finalStatus = success ? 
+                    "Widget \"\(widgetTitle)\" created!" : 
+                    errorMessage ?? "Creation failed"
+                
+                endActivity(finalStatus: finalStatus)
+                result(true)
+            } else {
+                result(FlutterError(code: "MISSING_DATA", message: "Title and success status required", details: nil))
+            }
+            
+        case "startWidgetRemix":
+            if let originalTitle = args["originalTitle"] as? String,
+               let modifications = args["modifications"] as? String {
+                let username = UserDefaults.standard.string(forKey: "username") ?? "User"
+                
+                startActivity(
+                    title: "Remixing: \(originalTitle)",
+                    username: username,
+                    status: "Applying modifications...",
+                    progress: 0.2
+                )
+                result(true)
+            } else {
+                result(FlutterError(code: "MISSING_DATA", message: "Original title and modifications required", details: nil))
+            }
             
         default:
             result(FlutterMethodNotImplemented)
