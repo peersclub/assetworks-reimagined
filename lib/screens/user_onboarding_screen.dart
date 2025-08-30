@@ -72,7 +72,7 @@ class _UserOnboardingScreenState extends State<UserOnboardingScreen>
   // Step 3: Investment Goals
   final List<String> _selectedGoals = [];
   final List<Map<String, dynamic>> _investmentGoals = [
-    {'id': 'wealth_building', 'name': 'Build Long-term Wealth', 'icon': CupertinoIcons.chart_line_uptrend_xyaxis},
+    {'id': 'wealth_building', 'name': 'Build Long-term Wealth', 'icon': CupertinoIcons.chart_bar_alt_fill},
     {'id': 'retirement', 'name': 'Retirement Planning', 'icon': CupertinoIcons.sunset_fill},
     {'id': 'passive_income', 'name': 'Generate Passive Income', 'icon': CupertinoIcons.money_dollar_circle},
     {'id': 'capital_preservation', 'name': 'Capital Preservation', 'icon': CupertinoIcons.shield_fill},

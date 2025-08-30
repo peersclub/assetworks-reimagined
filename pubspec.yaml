@@ -32,6 +32,7 @@ dependencies:
   
   # Home Widget & Dynamic Island
   home_widget: ^0.6.0
+  workmanager: ^0.5.2
   
   # iOS Features
   quick_actions: ^1.0.7

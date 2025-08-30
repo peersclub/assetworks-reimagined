@@ -46,123 +46,95 @@ class _WidgetRemixScreenState extends State<WidgetRemixScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     
     return Scaffold(
+      backgroundColor: isDark ? const Color(0xFF1B2838) : Colors.grey[50],
       appBar: AppBar(
-        title: const Text('Remix Widget'),
+        backgroundColor: isDark ? const Color(0xFF1B2838) : Colors.white,
+        elevation: 0,
+        leading: IconButton(
+          icon: Icon(
+            Icons.arrow_back,
+            color: isDark ? Colors.white : Colors.black,
+          ),
+          onPressed: () => Get.back(),
+        ),
+        title: Text(
+          'Remix Widget',
+          style: TextStyle(
+            color: isDark ? Colors.white : Colors.black,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        centerTitle: true,
         actions: [
           IconButton(
             onPressed: _showRemixHelp,
-            icon: const Icon(LucideIcons.helpCircle, size: 22),
+            icon: Icon(
+              LucideIcons.helpCircle,
+              size: 22,
+              color: isDark ? Colors.white : Colors.black,
+            ),
           ),
         ],
       ),
       body: Form(
         key: _formKey,
         child: ListView(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(20),
           children: [
-            // Original Widget Info
-            AppCard(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+            // Author Info
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF253447) : Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: isDark ? Colors.white.withOpacity(0.1) : Colors.grey.withOpacity(0.2),
+                ),
+              ),
+              child: Row(
                 children: [
-                  Row(
-                    children: [
-                      Icon(
-                        LucideIcons.layout,
-                        size: 24,
-                        color: AppColors.primary,
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'Original Widget',
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              originalWidget.title,
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
+                  Icon(
+                    LucideIcons.user,
+                    size: 16,
+                    color: isDark ? Colors.grey[400] : Colors.grey[600],
                   ),
-                  const SizedBox(height: 12),
-                  Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: isDark ? AppColors.neutral900 : AppColors.neutral100,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      originalWidget.originalPrompt,
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
-                      ),
-                      maxLines: 3,
-                      overflow: TextOverflow.ellipsis,
+                  const SizedBox(width: 8),
+                  Text(
+                    'by You',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: isDark ? Colors.grey[400] : Colors.grey[600],
                     ),
                   ),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      Icon(
-                        LucideIcons.user,
-                        size: 14,
-                        color: isDark ? AppColors.neutral600 : AppColors.neutral400,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        'by ${originalWidget.username}',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: isDark ? AppColors.neutral600 : AppColors.neutral400,
-                        ),
-                      ),
-                      const Spacer(),
-                      Icon(
-                        LucideIcons.heart,
-                        size: 14,
-                        color: isDark ? AppColors.neutral600 : AppColors.neutral400,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        originalWidget.likes.toString(),
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: isDark ? AppColors.neutral600 : AppColors.neutral400,
-                        ),
-                      ),
-                    ],
+                  const Spacer(),
+                  Icon(
+                    LucideIcons.heart,
+                    size: 16,
+                    color: isDark ? Colors.grey[400] : Colors.grey[600],
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    '0',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: isDark ? Colors.grey[400] : Colors.grey[600],
+                    ),
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 24),
             
             // Remix Mode Selection
             Text(
               'Remix Mode',
               style: TextStyle(
-                fontSize: 15,
+                fontSize: 16,
                 fontWeight: FontWeight.w600,
-                color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
+                color: isDark ? Colors.white : Colors.black87,
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 16),
             
             // Mode Options
             _buildModeOption(
@@ -172,7 +144,7 @@ class _WidgetRemixScreenState extends State<WidgetRemixScreen> {
               description: 'Change specific aspects of the widget',
               isDark: isDark,
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 12),
             _buildModeOption(
               mode: 'extend',
               icon: LucideIcons.plus,
@@ -180,82 +152,219 @@ class _WidgetRemixScreenState extends State<WidgetRemixScreen> {
               description: 'Add new features to the original widget',
               isDark: isDark,
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 12),
             _buildModeOption(
               mode: 'combine',
-              icon: LucideIcons.merge,
+              icon: LucideIcons.layers,
               title: 'Combine',
               description: 'Merge this widget with another concept',
               isDark: isDark,
             ),
             const SizedBox(height: 24),
             
-            // Remix Instructions
-            AppTextField(
-              label: _getRemixLabel(),
-              hint: _getRemixHint(),
-              controller: _remixController,
-              maxLines: 5,
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Please provide remix instructions';
-                }
-                if (value == originalWidget.originalPrompt) {
-                  return 'Please modify the original prompt';
-                }
-                return null;
-              },
+            // Modification Instructions Label
+            Row(
+              children: [
+                Icon(
+                  LucideIcons.edit,
+                  size: 16,
+                  color: Colors.blue,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  'Modification Instructions',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.blue,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 8),
+            
+            // Remix Instructions Input
+            Container(
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF253447) : Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: Colors.blue.withOpacity(0.5),
+                  width: 2,
+                ),
+              ),
+              child: TextField(
+                controller: _remixController,
+                maxLines: 5,
+                style: TextStyle(
+                  color: isDark ? Colors.white : Colors.black87,
+                  fontSize: 14,
+                ),
+                decoration: InputDecoration(
+                  hintText: 'Additional requirements:\n${_getRemixHint()}',
+                  hintStyle: TextStyle(
+                    color: isDark ? Colors.grey[500] : Colors.grey[600],
+                    fontSize: 14,
+                  ),
+                  border: InputBorder.none,
+                  contentPadding: const EdgeInsets.all(16),
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
             
             // Quick Actions
             Wrap(
-              spacing: 8,
-              runSpacing: 8,
+              spacing: 12,
+              runSpacing: 12,
               children: [
-                _buildQuickAction('Add charts', LucideIcons.barChart3),
-                _buildQuickAction('Add filters', LucideIcons.filter),
-                _buildQuickAction('Change layout', LucideIcons.layoutGrid),
-                _buildQuickAction('Add export', LucideIcons.download),
+                _buildQuickActionButton('Add charts', LucideIcons.barChart3),
+                _buildQuickActionButton('Add filters', LucideIcons.filter),
+                _buildQuickActionButton('Change layout', LucideIcons.layoutGrid),
+                _buildQuickActionButton('Add export', LucideIcons.download),
               ],
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 32),
             
-            // Attribution Option
-            CheckboxListTile(
-              value: true,
-              onChanged: (value) {},
-              title: const Text('Give credit to original creator'),
-              subtitle: Text(
-                'Shows "Remixed from ${originalWidget.username}"',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+            // Attribution Option with checkbox
+            Row(
+              children: [
+                SizedBox(
+                  width: 24,
+                  height: 24,
+                  child: Checkbox(
+                    value: true,
+                    onChanged: (value) {},
+                    activeColor: Colors.blue,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Give credit to original creator',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w500,
+                          color: isDark ? Colors.white : Colors.black87,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        'Shows "Remixed from You"',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: isDark ? Colors.grey[400] : Colors.grey[600],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 32),
+            
+            // Generate Remix Button
+            Obx(() => Container(
+              width: double.infinity,
+              height: 56,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(16),
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF007AFF), Color(0xFF0051D5)],
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.blue.withOpacity(0.3),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(16),
+                  onTap: _controller.isLoading.value ? null : _generateRemix,
+                  child: Center(
+                    child: _controller.isLoading.value
+                        ? const SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
+                          )
+                        : Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: const [
+                              Icon(
+                                LucideIcons.sparkles,
+                                color: Colors.white,
+                                size: 20,
+                              ),
+                              SizedBox(width: 8),
+                              Text(
+                                'Generate Remix',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                  ),
                 ),
               ),
-              controlAffinity: ListTileControlAffinity.leading,
-              contentPadding: EdgeInsets.zero,
-            ),
-            const SizedBox(height: 24),
-            
-            // Generate Button
-            Obx(() => AppButton(
-              text: 'Generate Remix',
-              icon: LucideIcons.sparkles,
-              onPressed: _generateRemix,
-              isLoading: _controller.isLoading.value,
-              isFullWidth: true,
-              size: AppButtonSize.large,
             )),
-            const SizedBox(height: 12),
+            const SizedBox(height: 16),
             
             // Preview Original Button
-            AppButton(
-              text: 'Preview Original',
-              icon: LucideIcons.eye,
-              type: AppButtonType.outline,
-              onPressed: _previewOriginal,
-              isFullWidth: true,
+            Container(
+              width: double.infinity,
+              height: 56,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(16),
+                color: isDark ? const Color(0xFF253447) : Colors.grey[100],
+                border: Border.all(
+                  color: isDark ? Colors.white.withOpacity(0.1) : Colors.grey.withOpacity(0.2),
+                ),
+              ),
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(16),
+                  onTap: _previewOriginal,
+                  child: Center(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          LucideIcons.eye,
+                          color: isDark ? Colors.grey[400] : Colors.grey[700],
+                          size: 20,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Preview Original',
+                          style: TextStyle(
+                            color: isDark ? Colors.grey[400] : Colors.grey[700],
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
             ),
           ],
         ),
@@ -279,32 +388,45 @@ class _WidgetRemixScreenState extends State<WidgetRemixScreen> {
           _updatePromptForMode();
         });
       },
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(16),
       child: Container(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: isSelected
-              ? AppColors.primary.withOpacity(0.1)
-              : isDark
-                  ? AppColors.surfaceDark
-                  : AppColors.surfaceLight,
-          borderRadius: BorderRadius.circular(12),
+          color: isDark ? const Color(0xFF253447) : Colors.white,
+          borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: isSelected
-                ? AppColors.primary
+                ? Colors.blue
                 : isDark
-                    ? AppColors.neutral800
-                    : AppColors.neutral200,
+                    ? Colors.white.withOpacity(0.1)
+                    : Colors.grey.withOpacity(0.2),
+            width: isSelected ? 2 : 1,
           ),
         ),
         child: Row(
           children: [
-            Icon(
-              icon,
-              size: 20,
-              color: isSelected ? AppColors.primary : null,
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: isSelected
+                    ? Colors.blue.withOpacity(0.1)
+                    : isDark
+                        ? const Color(0xFF1B2838)
+                        : Colors.grey[50],
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(
+                icon,
+                size: 22,
+                color: isSelected
+                    ? Colors.blue
+                    : isDark
+                        ? Colors.grey[400]
+                        : Colors.grey[600],
+              ),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: 16),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -312,16 +434,21 @@ class _WidgetRemixScreenState extends State<WidgetRemixScreen> {
                   Text(
                     title,
                     style: TextStyle(
-                      fontSize: 14,
+                      fontSize: 15,
                       fontWeight: FontWeight.w600,
-                      color: isSelected ? AppColors.primary : null,
+                      color: isSelected
+                          ? Colors.blue
+                          : isDark
+                              ? Colors.white
+                              : Colors.black87,
                     ),
                   ),
+                  const SizedBox(height: 2),
                   Text(
                     description,
                     style: TextStyle(
-                      fontSize: 12,
-                      color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+                      fontSize: 13,
+                      color: isDark ? Colors.grey[400] : Colors.grey[600],
                     ),
                   ),
                 ],
@@ -329,9 +456,9 @@ class _WidgetRemixScreenState extends State<WidgetRemixScreen> {
             ),
             if (isSelected)
               Icon(
-                LucideIcons.checkCircle,
-                size: 20,
-                color: AppColors.primary,
+                Icons.check_circle,
+                size: 22,
+                color: Colors.blue,
               ),
           ],
         ),
@@ -339,19 +466,46 @@ class _WidgetRemixScreenState extends State<WidgetRemixScreen> {
     );
   }
   
-  Widget _buildQuickAction(String label, IconData icon) {
-    return ActionChip(
-      label: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 14),
-          const SizedBox(width: 4),
-          Text(label, style: const TextStyle(fontSize: 12)),
-        ],
+  Widget _buildQuickActionButton(String label, IconData icon) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
+    return Container(
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF253447) : Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: isDark ? Colors.white.withOpacity(0.1) : Colors.grey.withOpacity(0.3),
+        ),
       ),
-      onPressed: () {
-        _addQuickAction(label);
-      },
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(20),
+          onTap: () => _addQuickAction(label),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  icon,
+                  size: 16,
+                  color: isDark ? Colors.grey[400] : Colors.grey[700],
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: isDark ? Colors.grey[400] : Colors.grey[700],
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
   

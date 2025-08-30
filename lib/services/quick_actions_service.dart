@@ -118,7 +118,7 @@ class QuickActionsService {
       });
       
       if (result != null) {
-        return PeekPreview.fromJson(result);
+        return PeekPreview.fromJson(Map<String, dynamic>.from(result));
       }
       return null;
     } catch (e) {

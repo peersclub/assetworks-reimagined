@@ -3,6 +3,7 @@ import '../../core/network/api_client.dart';
 import '../../data/models/widget_template_model.dart';
 import '../../data/models/widget_template.dart';
 import '../../data/templates/finance_templates.dart';
+import '../../data/templates/comprehensive_templates.dart';
 import '../../core/utils/storage_helper.dart';
 
 class TemplateController extends GetxController {
@@ -26,7 +27,7 @@ class TemplateController extends GetxController {
   }
   
   void loadCategories() {
-    categories.value = ['All', ...FinanceTemplates.getCategories()];
+    categories.value = ['All', ...ComprehensiveTemplates.getCategories()];
   }
   
   Future<void> loadTemplates() async {
@@ -56,19 +57,19 @@ class TemplateController extends GetxController {
             );
           }).toList();
           
-          // Combine with finance templates
-          templates.value = [...FinanceTemplates.templates, ...apiTemplates];
+          // Combine with comprehensive templates
+          templates.value = [...ComprehensiveTemplates.allTemplates, ...apiTemplates];
         } else {
-          // If no API templates, use hardcoded finance templates
-          print('[TemplateController] No templates returned from API, using fallback finance templates');
+          // If no API templates, use hardcoded comprehensive templates
+          print('[TemplateController] No templates returned from API, using fallback comprehensive templates');
           _logTemplateFallback('No API templates available');
-          templates.value = FinanceTemplates.templates;
+          templates.value = ComprehensiveTemplates.allTemplates;
         }
       } else {
-        // If API fails, use hardcoded finance templates
+        // If API fails, use hardcoded comprehensive templates
         print('[TemplateController] API request failed with status: ${response.statusCode}, using fallback templates');
         _logTemplateFallback('API request failed: Status ${response.statusCode}');
-        templates.value = FinanceTemplates.templates;
+        templates.value = ComprehensiveTemplates.allTemplates;
       }
       
       // Sort by usage count
@@ -82,7 +83,7 @@ class TemplateController extends GetxController {
       print('[TemplateController] Stack trace: ${StackTrace.current}');
       _logTemplateFallback('Exception: ${e.toString()}');
       // Load offline templates as fallback
-      templates.value = FinanceTemplates.templates;
+      templates.value = ComprehensiveTemplates.allTemplates;
       
       // Show user-friendly notification about fallback
       if (Get.isSnackbarOpen != true) {
@@ -157,7 +158,7 @@ class TemplateController extends GetxController {
   }
   
   List<WidgetTemplate> getPopularTemplates({int limit = 10}) {
-    return FinanceTemplates.getPopular(limit: limit);
+    return ComprehensiveTemplates.getPopular(limit: limit);
   }
   
   List<WidgetTemplate> getTemplatesByCategory(String category) {

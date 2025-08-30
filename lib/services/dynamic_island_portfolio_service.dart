@@ -279,7 +279,7 @@ class DynamicIslandPortfolioService {
       'timestamp': DateTime.now().toIso8601String(),
     });
     
-    HapticFeedback.notificationOccurred(HapticNotificationFeedback.warning);
+    HapticFeedback.heavyImpact();
   }
   
   // Handle position tap

@@ -287,7 +287,7 @@ class DynamicIslandLiveActivitiesService {
       _activityTimers[activityId]?.cancel();
       _activityTimers.remove(activityId);
       
-      HapticFeedback.notificationOccurred(HapticNotificationFeedback.success);
+      HapticFeedback.heavyImpact();
     } catch (e) {
       print('Failed to end activity: $e');
     }
@@ -419,7 +419,7 @@ class DynamicIslandLiveActivitiesService {
           'triggeredPrice': newPrice,
         });
         
-        HapticFeedback.notificationOccurred(HapticNotificationFeedback.warning);
+        HapticFeedback.heavyImpact();
         
         // End activity after trigger
         Timer(const Duration(seconds: 3), () {

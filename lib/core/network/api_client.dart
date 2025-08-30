@@ -235,6 +235,11 @@ class ApiClient {
     return await _dio.get(ApiConfig.popularAnalysis);
   }
   
+  // Saved Widgets
+  Future<Response> getSavedWidgets() async {
+    return await _dio.get(ApiConfig.savedWidgets);
+  }
+  
   // Widget Actions
   Future<Response> likeWidget(String widgetId) async {
     return await _dio.post(ApiConfig.likeWidget(widgetId));

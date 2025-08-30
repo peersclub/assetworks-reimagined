@@ -118,22 +118,36 @@ class _ExploreScreenState extends State<ExploreScreen> with SingleTickerProvider
   Widget build(BuildContext context) {
     return CupertinoPageScaffold(
       backgroundColor: CupertinoColors.systemGroupedBackground,
-      child: CustomScrollView(
-        controller: _scrollController,
-        slivers: [
-          // Navigation Bar with Search
-          CupertinoSliverNavigationBar(
-            largeTitle: Text('Explore'),
-            trailing: CupertinoButton(
-              padding: EdgeInsets.zero,
-              child: Icon(CupertinoIcons.add_circled_solid),
-              onPressed: () {
-                Get.to(() => const WidgetCreationScreen(),
-                  transition: Transition.cupertino,
-                );
-              },
-            ),
-          ),
+      child: Stack(
+        children: [
+          CustomScrollView(
+            controller: _scrollController,
+            slivers: [
+              // Navigation Bar with Search
+              CupertinoSliverNavigationBar(
+                largeTitle: Text('Explore'),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    CupertinoButton(
+                      padding: EdgeInsets.zero,
+                      child: Icon(CupertinoIcons.square_grid_3x2_fill),
+                      onPressed: () {
+                        Get.toNamed('/all-features');
+                      },
+                    ),
+                    CupertinoButton(
+                      padding: EdgeInsets.zero,
+                      child: Icon(CupertinoIcons.add_circled_solid),
+                      onPressed: () {
+                        Get.to(() => const WidgetCreationScreen(),
+                          transition: Transition.cupertino,
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              ),
           
           // Search Bar
           SliverToBoxAdapter(
@@ -317,7 +331,53 @@ class _ExploreScreenState extends State<ExploreScreen> with SingleTickerProvider
           ),
         ],
       ),
-    );
+      
+      // Floating Action Button for All Features
+      Positioned(
+        bottom: 30,
+        right: 20,
+        child: Container(
+          decoration: BoxDecoration(
+            boxShadow: [
+              BoxShadow(
+                color: CupertinoColors.systemIndigo.withOpacity(0.3),
+                blurRadius: 20,
+                offset: Offset(0, 10),
+              ),
+            ],
+          ),
+          child: CupertinoButton(
+            padding: EdgeInsets.zero,
+            child: Container(
+              width: 60,
+              height: 60,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    CupertinoColors.systemIndigo,
+                    CupertinoColors.systemPurple,
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(30),
+              ),
+              child: Icon(
+                CupertinoIcons.square_grid_3x2_fill,
+                color: CupertinoColors.white,
+                size: 28,
+              ),
+            ),
+            onPressed: () {
+              HapticFeedback.mediumImpact();
+              Get.toNamed('/all-features');
+            },
+          ),
+        ),
+      ),
+    ],
+  ),
+);
   }
   
   Widget _buildSectionHeader(String title, String subtitle) {

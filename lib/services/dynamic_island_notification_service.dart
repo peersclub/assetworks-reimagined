@@ -279,7 +279,7 @@ class DynamicIslandNotificationService {
         HapticFeedback.heavyImpact();
         break;
       case NotificationPriority.urgent:
-        HapticFeedback.notificationOccurred(HapticNotificationFeedback.error);
+        HapticFeedback.heavyImpact();
         break;
     }
   }

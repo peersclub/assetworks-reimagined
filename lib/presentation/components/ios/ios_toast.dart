@@ -542,7 +542,7 @@ class _BannerWidgetState extends State<_BannerWidget>
     );
     
     _controller.forward();
-    HapticFeedback.notificationOccurred(HapticNotificationFeedback.success);
+    HapticFeedback.heavyImpact();
   }
   
   @override

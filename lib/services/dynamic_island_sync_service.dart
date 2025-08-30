@@ -208,7 +208,7 @@ class DynamicIslandSyncService {
       'itemsSynced': _syncedItems,
     });
     
-    HapticFeedback.notificationOccurred(HapticNotificationFeedback.success);
+    HapticFeedback.heavyImpact();
   }
   
   // Handle sync error
@@ -229,7 +229,7 @@ class DynamicIslandSyncService {
     // Notify Dynamic Island
     platform.invokeMethod('onSyncError', {'error': error});
     
-    HapticFeedback.notificationOccurred(HapticNotificationFeedback.error);
+    HapticFeedback.mediumImpact();
   }
   
   // Update sync status

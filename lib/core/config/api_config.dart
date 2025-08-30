@@ -33,6 +33,7 @@ class ApiConfig {
   static const String dashboard = '/api/v1/personalization/widgets';
   static const String fullDashboard = '/api/v1/personalization/dashboard/widgets';
   static const String trendingWidgets = '/api/v1/widgets/trending';
+  static const String savedWidgets = '/api/v1/widgets/saved';
   static const String deleteWidgets = '/api/v1/personal/widgets/clear';
   static const String widgetTemplates = '/api/v1/widgets/templates';
   

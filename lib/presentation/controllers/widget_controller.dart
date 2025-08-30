@@ -238,6 +238,42 @@ class WidgetController extends GetxController {
     }
   }
   
+  // Load saved widgets
+  Future<void> loadSavedWidgets() async {
+    try {
+      isLoading.value = true;
+      
+      // Filter dashboard widgets to get only saved ones
+      final savedWidgets = dashboardWidgets.where((w) => w.save ?? false).toList();
+      
+      // If we don't have saved widgets locally, try to fetch from API
+      if (savedWidgets.isEmpty) {
+        final response = await _apiClient.getSavedWidgets();
+        
+        if (response.statusCode == 200 && response.data != null) {
+          final widgets = (response.data['data'] as List?)
+              ?.map((w) => WidgetResponseModel.fromJson(w))
+              .toList() ?? [];
+          
+          // Add these to dashboardWidgets with save flag
+          for (var widget in widgets) {
+            final updatedWidget = widget.copyWith(save: true);
+            final index = dashboardWidgets.indexWhere((w) => w.id == widget.id);
+            if (index == -1) {
+              dashboardWidgets.add(updatedWidget);
+            } else {
+              dashboardWidgets[index] = updatedWidget;
+            }
+          }
+        }
+      }
+    } catch (e) {
+      print('Error loading saved widgets: $e');
+    } finally {
+      isLoading.value = false;
+    }
+  }
+  
   // Load prompt history
   Future<void> loadPromptHistory() async {
     try {

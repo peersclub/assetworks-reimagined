@@ -63,7 +63,7 @@ class StandByModeService {
           final data = call.arguments as Map;
           _standbyController.add(StandByEvent(
             type: StandByEventType.interaction,
-            interactionData: data,
+            interactionData: Map<String, dynamic>.from(data),
             timestamp: DateTime.now(),
           ));
           break;

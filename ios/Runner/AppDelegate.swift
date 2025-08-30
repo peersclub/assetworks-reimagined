@@ -42,6 +42,8 @@ import UserNotifications
   }
   
   private func setupPushNotifications(_ application: UIApplication) {
+    // TEMPORARILY DISABLED FOR TESTING
+    /*
     // Configure Firebase
     if FirebaseApp.app() == nil {
       FirebaseApp.configure()
@@ -50,12 +52,13 @@ import UserNotifications
     // Setup messaging delegate
     Messaging.messaging().delegate = self
     
-    // Register for notifications
-    NotificationService.shared.registerForPushNotifications()
-    NotificationService.shared.setupNotificationCategories()
+    // Register for notifications - TEMPORARILY DISABLED FOR TESTING
+    // NotificationService.shared.registerForPushNotifications()
+    // NotificationService.shared.setupNotificationCategories()
     
     // Setup notification channel for Flutter
     setupNotificationChannel()
+    */
   }
   
   private func setupNotificationChannel() {

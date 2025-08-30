@@ -34,7 +34,7 @@ class CustomHapticPatternsService {
   
   // Notification pattern - light ascending
   Future<void> playNotificationPattern() async {
-    await HapticFeedback.selectionChanged();
+    await HapticFeedback.lightImpact();
     await Future.delayed(const Duration(milliseconds: 50));
     await HapticFeedback.lightImpact();
     await Future.delayed(const Duration(milliseconds: 50));
@@ -43,7 +43,7 @@ class CustomHapticPatternsService {
   
   // Long press pattern - gradual increase
   Future<void> playLongPressPattern() async {
-    await HapticFeedback.selectionChanged();
+    await HapticFeedback.lightImpact();
     await Future.delayed(const Duration(milliseconds: 200));
     await HapticFeedback.lightImpact();
     await Future.delayed(const Duration(milliseconds: 200));
@@ -52,7 +52,7 @@ class CustomHapticPatternsService {
   
   // Scroll tick pattern
   Future<void> playScrollTickPattern() async {
-    await HapticFeedback.selectionChanged();
+    await HapticFeedback.lightImpact();
   }
   
   // Custom rhythm pattern
@@ -69,7 +69,7 @@ class CustomHapticPatternsService {
           await HapticFeedback.heavyImpact();
           break;
         case HapticIntensity.selection:
-          await HapticFeedback.selectionChanged();
+          await HapticFeedback.lightImpact();
           break;
       }
       
@@ -101,7 +101,7 @@ class CustomHapticPatternsService {
     if (progress == 0.0) {
       await HapticFeedback.lightImpact();
     } else if (progress == 0.25) {
-      await HapticFeedback.selectionChanged();
+      await HapticFeedback.lightImpact();
     } else if (progress == 0.5) {
       await HapticFeedback.lightImpact();
     } else if (progress == 0.75) {
@@ -113,7 +113,7 @@ class CustomHapticPatternsService {
   
   // Swipe pattern
   Future<void> playSwipePattern() async {
-    await HapticFeedback.selectionChanged();
+    await HapticFeedback.lightImpact();
     await Future.delayed(const Duration(milliseconds: 50));
     await HapticFeedback.lightImpact();
   }
@@ -124,7 +124,7 @@ class CustomHapticPatternsService {
     await Future.delayed(const Duration(milliseconds: 100));
     await HapticFeedback.lightImpact();
     await Future.delayed(const Duration(milliseconds: 100));
-    await HapticFeedback.selectionChanged();
+    await HapticFeedback.lightImpact();
   }
   
   // Toggle pattern
@@ -136,7 +136,7 @@ class CustomHapticPatternsService {
     } else {
       await HapticFeedback.lightImpact();
       await Future.delayed(const Duration(milliseconds: 50));
-      await HapticFeedback.selectionChanged();
+      await HapticFeedback.lightImpact();
     }
   }
   
@@ -274,7 +274,7 @@ class HapticFeedbackWrapper {
   }
   
   static Future<void> selection() async {
-    await HapticFeedback.selectionChanged();
+    await HapticFeedback.lightImpact();
   }
   
   // Pattern feedback

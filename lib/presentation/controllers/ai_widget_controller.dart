@@ -234,7 +234,8 @@ class AIWidgetController extends GetxController {
       await saveToHistory(widgetData);
       
       // Update credits
-      availableCredits.value -= result['creditsUsed'] ?? estimatedCost.value;
+      int creditsToDeduct = (result['creditsUsed'] ?? estimatedCost.value).toInt();
+      availableCredits.value = availableCredits.value - creditsToDeduct;
       
       Get.snackbar(
         'Success',

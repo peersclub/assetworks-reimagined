@@ -220,7 +220,7 @@ class _RegisterScreenState extends State<RegisterScreen>
         }
         
         // Save user data
-        await _storageService.saveUserData(response['user'] ?? {});
+        await _storageService.saveUser(response['user'] ?? {});
         
         DynamicIslandService().updateStatus(
           'Registration successful!',
@@ -229,10 +229,7 @@ class _RegisterScreenState extends State<RegisterScreen>
         
         // Navigate based on verification requirement
         if (response['requires_verification'] == true) {
-          Get.to(() => OtpVerificationScreen(
-            phoneNumber: _phoneController.text,
-            email: _emailController.text,
-          ));
+          Get.to(() => const OTPVerificationScreen());
         } else {
           // Check if user needs onboarding
           final needsOnboarding = response['needs_onboarding'] ?? true;

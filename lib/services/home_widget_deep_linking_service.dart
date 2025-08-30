@@ -289,7 +289,7 @@ class WidgetDeepLinkRoutes {
   static const String notifications = '/notifications';
   
   // Create stock detail deep link
-  static String stockDetail(String symbol) {
+  static String createStockDetailLink(String symbol) {
     return HomeWidgetDeepLinkingService.createWidgetDeepLink(
       route: stockDetail,
       parameters: {'symbol': symbol},

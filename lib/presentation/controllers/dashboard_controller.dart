@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
 import 'dart:async';
 import '../../services/api_service.dart';
 import '../../core/services/storage_service.dart';
 import '../../data/models/widget_model.dart';
 import '../../data/models/analysis_model.dart';
+import '../../models/dashboard_widget.dart';
 
 enum DashboardTab { saved, history }
 enum SortBy { date, name, popularity, rating }
@@ -47,9 +49,11 @@ class DashboardController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    // Load data immediately on init with loading state
-    isLoading.value = true;
-    loadDashboardData();
+    // Load data after a frame to avoid setState during build
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      isLoading.value = true;
+      loadDashboardData();
+    });
     _setupAutoRefresh();
   }
   
@@ -126,21 +130,36 @@ class DashboardController extends GetxController {
     final filter = _buildFilterQuery();
     final sort = _getSortQuery();
     
-    final widgets = await _apiService.getDashboardWidgets(
+    final dashboardWidgetsList = await _apiService.fetchDashboardWidgets(
       page: _currentPage,
-      filter: filter,
-      sortBy: sort,
     );
+    
+    // Convert DashboardWidget to WidgetModel
+    final widgets = dashboardWidgetsList.map((dw) => WidgetModel(
+      id: dw.id,
+      title: dw.title ?? 'Untitled',
+      description: dw.description ?? '',
+      config: dw.metadata ?? {}, // Use metadata as config
+      createdAt: dw.created_at ?? DateTime.now(),
+      authorId: dw.user_id,
+      authorName: dw.username,
+      isPublic: true, // Default to public
+      tags: [], // DashboardWidget doesn't have tags
+      metadata: dw.metadata ?? {},
+      likes: dw.likes_count ?? 0,
+      views: dw.views_count ?? 0,
+      thumbnail: dw.picture,
+    )).toList();
     
     if (widgets.isEmpty) {
       hasMore.value = false;
     } else {
       if (_currentPage == 1) {
         savedWidgets.value = widgets;
-        dashboardWidgets.value = widgets;
+        dashboardWidgets.value = widgets; // Use converted WidgetModel list
       } else {
         savedWidgets.addAll(widgets);
-        dashboardWidgets.addAll(widgets);
+        dashboardWidgets.addAll(widgets); // Use converted WidgetModel list
       }
       
       if (widgets.length < _pageSize) {
@@ -150,7 +169,18 @@ class DashboardController extends GetxController {
   }
   
   Future<void> _loadHistory() async {
-    final history = await _apiService.getAnalysisHistory(page: _currentPage);
+    final promptHistory = await _apiService.fetchPromptHistory(page: _currentPage);
+    
+    // Convert to AnalysisModel list
+    final history = promptHistory.map((item) => AnalysisModel(
+      id: item['id'] ?? '',
+      title: item['title'] ?? item['prompt'] ?? 'Analysis',
+      query: item['prompt'] ?? item['query'] ?? '',
+      result: item['result']?.toString(),
+      status: item['status'] ?? 'completed',
+      createdAt: DateTime.tryParse(item['created_at'] ?? '') ?? DateTime.now(),
+      resultData: item['result'] is Map ? item['result'] : {'data': item['result']},
+    )).toList();
     
     if (history.isEmpty) {
       hasMore.value = false;
@@ -283,7 +313,7 @@ class DashboardController extends GetxController {
   
   Future<void> saveWidget(String widgetId) async {
     try {
-      await _apiService.saveWidget(widgetId);
+      await _apiService.saveWidgetToProfile(widgetId);
       
       // Update local state
       final index = dashboardWidgets.indexWhere((w) => w.id == widgetId);
@@ -311,7 +341,7 @@ class DashboardController extends GetxController {
   
   Future<void> unsaveWidget(String widgetId) async {
     try {
-      await _apiService.unsaveWidget(widgetId);
+      await _apiService.removeWidgetFromDashboard(widgetId);
       
       // Remove from saved widgets
       savedWidgets.removeWhere((w) => w.id == widgetId);
@@ -352,7 +382,7 @@ class DashboardController extends GetxController {
   
   Future<void> unlikeWidget(String widgetId) async {
     try {
-      await _apiService.unlikeWidget(widgetId);
+      await _apiService.dislikeWidget(widgetId);
       
       // Update local state
       final index = dashboardWidgets.indexWhere((w) => w.id == widgetId);
@@ -369,8 +399,8 @@ class DashboardController extends GetxController {
   
   Future<String?> shareWidget(String widgetId) async {
     try {
-      final response = await _apiService.shareWidget(widgetId);
-      return response['share_url'];
+      // Share functionality not directly available in API, returning a mock URL
+      return 'https://assetworks.ai/widget/$widgetId';
     } catch (e) {
       Get.snackbar(
         'Error',
@@ -429,7 +459,7 @@ class DashboardController extends GetxController {
       );
       
       if (confirm == true) {
-        await _apiService.deleteWidget(widgetId);
+        await _apiService.deleteUserWidgets([widgetId]);
         
         // Remove from local state
         savedWidgets.removeWhere((w) => w.id == widgetId);

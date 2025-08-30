@@ -8,7 +8,24 @@ class WidgetViewScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final Map<String, dynamic>? widget = Get.arguments;
+    final dynamic widgetData = Get.arguments;
+    
+    // Handle both Map and WidgetResponseModel
+    Map<String, dynamic>? widget;
+    if (widgetData is Map<String, dynamic>) {
+      widget = widgetData;
+    } else if (widgetData != null) {
+      // Convert WidgetResponseModel to Map
+      widget = {
+        'id': widgetData.id,
+        'title': widgetData.title ?? 'Widget',
+        'description': widgetData.summary ?? widgetData.tagline ?? 'No description',
+        'creator': widgetData.username ?? 'Unknown',
+        'likes': widgetData.likes ?? 0,
+        'icon': CupertinoIcons.cube_box,
+        'color': CupertinoColors.systemBlue,
+      };
+    }
     
     return CupertinoPageScaffold(
       navigationBar: CupertinoNavigationBar(
