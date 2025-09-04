@@ -15,10 +15,19 @@ class WidgetPreviewScreen extends StatefulWidget {
   State<WidgetPreviewScreen> createState() => _WidgetPreviewScreenState();
 }
 
-class _WidgetPreviewScreenState extends State<WidgetPreviewScreen> {
+class _WidgetPreviewScreenState extends State<WidgetPreviewScreen> with TickerProviderStateMixin {
   final ApiService _apiService = Get.find<ApiService>();
   late WebViewController _webViewController;
   late DashboardWidget dashboardWidget;
+  
+  late AnimationController _likeAnimationController;
+  late AnimationController _saveAnimationController;
+  late AnimationController _shareAnimationController;
+  late AnimationController _codeAnimationController;
+  late Animation<double> _likeScaleAnimation;
+  late Animation<double> _saveScaleAnimation;
+  late Animation<double> _shareScaleAnimation;
+  late Animation<double> _codeScaleAnimation;
   
   bool _isLoading = true;
   bool _isFullscreen = false;
@@ -30,6 +39,61 @@ class _WidgetPreviewScreenState extends State<WidgetPreviewScreen> {
     dashboardWidget = Get.arguments as DashboardWidget;
     _initWebView();
     _trackView();
+    _initAnimations();
+  }
+  
+  void _initAnimations() {
+    // Like animation
+    _likeAnimationController = AnimationController(
+      duration: const Duration(milliseconds: 600),
+      vsync: this,
+    );
+    _likeScaleAnimation = Tween<double>(
+      begin: 1.0,
+      end: 1.3,
+    ).animate(CurvedAnimation(
+      parent: _likeAnimationController,
+      curve: Curves.elasticOut,
+    ));
+    
+    // Save animation
+    _saveAnimationController = AnimationController(
+      duration: const Duration(milliseconds: 600),
+      vsync: this,
+    );
+    _saveScaleAnimation = Tween<double>(
+      begin: 1.0,
+      end: 1.3,
+    ).animate(CurvedAnimation(
+      parent: _saveAnimationController,
+      curve: Curves.elasticOut,
+    ));
+    
+    // Share animation
+    _shareAnimationController = AnimationController(
+      duration: const Duration(milliseconds: 300),
+      vsync: this,
+    );
+    _shareScaleAnimation = Tween<double>(
+      begin: 1.0,
+      end: 0.9,
+    ).animate(CurvedAnimation(
+      parent: _shareAnimationController,
+      curve: Curves.easeInOut,
+    ));
+    
+    // Code animation
+    _codeAnimationController = AnimationController(
+      duration: const Duration(milliseconds: 300),
+      vsync: this,
+    );
+    _codeScaleAnimation = Tween<double>(
+      begin: 1.0,
+      end: 0.9,
+    ).animate(CurvedAnimation(
+      parent: _codeAnimationController,
+      curve: Curves.easeInOut,
+    ));
   }
   
   Future<void> _trackView() async {
@@ -98,26 +162,46 @@ class _WidgetPreviewScreenState extends State<WidgetPreviewScreen> {
   }
   
   Future<void> _handleAction(String action) async {
-    HapticFeedback.lightImpact();
+    HapticFeedback.mediumImpact();
     
     switch (action) {
       case 'save':
+        _saveAnimationController.forward().then((_) {
+          _saveAnimationController.reverse();
+        });
         final success = await _apiService.saveWidgetToProfile(dashboardWidget.id);
         if (success) {
-          setState(() => dashboardWidget.save = true);
+          setState(() {
+            dashboardWidget.save = !dashboardWidget.save;
+            // Update count locally for display
+            if (dashboardWidget.save) {
+              dashboardWidget.saves_count = (dashboardWidget.saves_count ?? 0) + 1;
+            } else if (dashboardWidget.saves_count != null && dashboardWidget.saves_count! > 0) {
+              dashboardWidget.saves_count = dashboardWidget.saves_count! - 1;
+            }
+          });
+          HapticFeedback.heavyImpact();
           DynamicIslandService().updateStatus(
-            'Widget saved!',
-            icon: CupertinoIcons.bookmark_fill,
+            dashboardWidget.save ? 'Saved to dashboard!' : 'Removed from dashboard',
+            icon: dashboardWidget.save ? Icons.bookmark : Icons.bookmark_border,
           );
         }
         break;
         
       case 'like':
+        _likeAnimationController.forward().then((_) {
+          _likeAnimationController.reverse();
+        });
         final success = dashboardWidget.like
             ? await _apiService.dislikeWidget(dashboardWidget.id)
             : await _apiService.likeWidget(dashboardWidget.id);
         if (success) {
-          setState(() => dashboardWidget.like = !dashboardWidget.like);
+          setState(() {
+            dashboardWidget.like = !dashboardWidget.like;
+            // Note: likes_count is final, so we can't update it locally
+            // The actual count will be updated from the backend on refresh
+          });
+          HapticFeedback.heavyImpact();
           DynamicIslandService().updateStatus(
             dashboardWidget.like ? 'Liked!' : 'Unliked',
             icon: dashboardWidget.like ? CupertinoIcons.heart_fill : CupertinoIcons.heart,
@@ -126,6 +210,9 @@ class _WidgetPreviewScreenState extends State<WidgetPreviewScreen> {
         break;
         
       case 'share':
+        _shareAnimationController.forward().then((_) {
+          _shareAnimationController.reverse();
+        });
         await Share.share(
           'Check out this amazing widget: ${dashboardWidget.title}\n'
           'https://assetworks.ai/widget/${dashboardWidget.id}',
@@ -133,64 +220,13 @@ class _WidgetPreviewScreenState extends State<WidgetPreviewScreen> {
         );
         break;
         
-      case 'report':
-        _showReportDialog();
-        break;
-        
       case 'code':
-        Get.toNamed('/widget-code', arguments: widget);
+        _codeAnimationController.forward().then((_) {
+          _codeAnimationController.reverse();
+        });
+        Get.toNamed('/widget-code', arguments: dashboardWidget);
         break;
     }
-  }
-  
-  void _showReportDialog() {
-    showCupertinoDialog(
-      context: context,
-      builder: (context) => CupertinoAlertDialog(
-        title: const Text('Report Widget'),
-        content: const Text('Why are you reporting this widget?'),
-        actions: [
-          CupertinoDialogAction(
-            child: const Text('Inappropriate'),
-            onPressed: () async {
-              Navigator.pop(context);
-              await _apiService.reportWidget(dashboardWidget.id, 'inappropriate');
-              DynamicIslandService().updateStatus(
-                'Widget reported',
-                icon: CupertinoIcons.flag_fill,
-              );
-            },
-          ),
-          CupertinoDialogAction(
-            child: const Text('Spam'),
-            onPressed: () async {
-              Navigator.pop(context);
-              await _apiService.reportWidget(dashboardWidget.id, 'spam');
-              DynamicIslandService().updateStatus(
-                'Widget reported',
-                icon: CupertinoIcons.flag_fill,
-              );
-            },
-          ),
-          CupertinoDialogAction(
-            child: const Text('Copyright'),
-            onPressed: () async {
-              Navigator.pop(context);
-              await _apiService.reportWidget(dashboardWidget.id, 'copyright');
-              DynamicIslandService().updateStatus(
-                'Widget reported',
-                icon: CupertinoIcons.flag_fill,
-              );
-            },
-          ),
-          CupertinoDialogAction(
-            isDefaultAction: true,
-            child: const Text('Cancel'),
-            onPressed: () => Navigator.pop(context),
-          ),
-        ],
-      ),
-    );
   }
   
   void _showError(String message) {
@@ -212,6 +248,10 @@ class _WidgetPreviewScreenState extends State<WidgetPreviewScreen> {
   
   @override
   void dispose() {
+    _likeAnimationController.dispose();
+    _saveAnimationController.dispose();
+    _shareAnimationController.dispose();
+    _codeAnimationController.dispose();
     if (_isFullscreen) {
       SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
       SystemChrome.setPreferredOrientations([
@@ -334,40 +374,67 @@ class _WidgetPreviewScreenState extends State<WidgetPreviewScreen> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceAround,
                           children: [
-                            _buildActionButton(
-                              icon: dashboardWidget.like
-                                  ? CupertinoIcons.heart_fill
-                                  : CupertinoIcons.heart,
-                              label: 'Like',
-                              color: dashboardWidget.like
-                                  ? CupertinoColors.systemRed
-                                  : null,
-                              onTap: () => _handleAction('like'),
+                            AnimatedBuilder(
+                              animation: _likeScaleAnimation,
+                              builder: (context, child) {
+                                return Transform.scale(
+                                  scale: _likeScaleAnimation.value,
+                                  child: _buildActionButton(
+                                    icon: dashboardWidget.like
+                                        ? CupertinoIcons.heart_fill
+                                        : CupertinoIcons.heart,
+                                    label: 'Like',
+                                    color: dashboardWidget.like
+                                        ? CupertinoColors.systemRed
+                                        : null,
+                                    onTap: () => _handleAction('like'),
+                                  ),
+                                );
+                              },
                             ),
-                            _buildActionButton(
-                              icon: dashboardWidget.save
-                                  ? CupertinoIcons.bookmark_fill
-                                  : CupertinoIcons.bookmark,
-                              label: 'Save',
-                              color: dashboardWidget.save
-                                  ? CupertinoColors.systemIndigo
-                                  : null,
-                              onTap: () => _handleAction('save'),
+                            AnimatedBuilder(
+                              animation: _saveScaleAnimation,
+                              builder: (context, child) {
+                                return Transform.scale(
+                                  scale: _saveScaleAnimation.value,
+                                  child: _buildActionButton(
+                                    icon: dashboardWidget.save
+                                        ? Icons.bookmark
+                                        : Icons.bookmark_border,
+                                    label: 'Save',
+                                    color: dashboardWidget.save
+                                        ? CupertinoColors.systemIndigo
+                                        : null,
+                                    onTap: () => _handleAction('save'),
+                                  ),
+                                );
+                              },
                             ),
-                            _buildActionButton(
-                              icon: CupertinoIcons.share,
-                              label: 'Share',
-                              onTap: () => _handleAction('share'),
+                            AnimatedBuilder(
+                              animation: _shareScaleAnimation,
+                              builder: (context, child) {
+                                return Transform.scale(
+                                  scale: _shareScaleAnimation.value,
+                                  child: _buildActionButton(
+                                    icon: CupertinoIcons.share,
+                                    label: 'Share',
+                                    onTap: () => _handleAction('share'),
+                                  ),
+                                );
+                              },
                             ),
-                            _buildActionButton(
-                              icon: CupertinoIcons.doc_text,
-                              label: 'Code',
-                              onTap: () => _handleAction('code'),
-                            ),
-                            _buildActionButton(
-                              icon: CupertinoIcons.flag,
-                              label: 'Report',
-                              onTap: () => _handleAction('report'),
+                            AnimatedBuilder(
+                              animation: _codeScaleAnimation,
+                              builder: (context, child) {
+                                return Transform.scale(
+                                  scale: _codeScaleAnimation.value,
+                                  child: _buildActionButton(
+                                    icon: CupertinoIcons.doc_text,
+                                    label: 'Code',
+                                    onTap: () => _handleAction('code'),
+                                  ),
+                                );
+                              },
                             ),
                           ],
                         ),

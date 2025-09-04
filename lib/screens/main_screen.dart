@@ -1,12 +1,16 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-// import 'dashboard_screen.dart';  // Use our modified dashboard instead
+// Import all dashboard versions
+import 'dashboard_screen.dart' as ClassicDashboard;
 import '../presentation/pages/dashboard/dashboard_screen.dart' as ModifiedDashboard;
 import 'dashboard_v2_screen.dart';
+import 'dashboard_v3_screen.dart';
+import 'dashboard_v4_test_screen.dart';
+import '../presentation/pages/dashboard/optimized_dashboard_screen.dart';
 import 'explore_screen.dart';
 import 'explore_screen_enhanced.dart';
-import 'investment_widget_creator_screen.dart';
+import 'widget_studio_screen.dart';
 import 'notifications_screen.dart';
 import 'profile_screen.dart';
 import 'ai_assistant_screen.dart';
@@ -33,7 +37,7 @@ class _MainScreenState extends State<MainScreen> {
     _useEnhancedExplore 
         ? const ExploreScreenEnhanced()  // V2: Enhanced explore with all features
         : const ExploreScreen(),  // V1: Original explore screen
-    const InvestmentWidgetCreatorScreen(),  // Keep this for now, will use templates
+    const WidgetStudioScreen(),  // Unified widget creation studio
     const NotificationsScreen(),
     const ProfileScreen(),
   ];
@@ -95,7 +99,8 @@ class _MainScreenState extends State<MainScreen> {
       context: context,
       builder: (BuildContext context) {
         return CupertinoActionSheet(
-          title: Text('Dashboard Options'),
+          title: Text('Dashboard Versions'),
+          message: Text('Choose your preferred dashboard layout'),
           actions: [
             CupertinoActionSheetAction(
               child: Row(
@@ -108,7 +113,9 @@ class _MainScreenState extends State<MainScreen> {
               ),
               onPressed: () {
                 Navigator.pop(context);
-                setState(() => _currentIndex = 0);
+                Get.to(() => ClassicDashboard.DashboardScreen(),
+                  transition: Transition.cupertino,
+                );
               },
             ),
             CupertinoActionSheetAction(
@@ -117,7 +124,7 @@ class _MainScreenState extends State<MainScreen> {
                 children: [
                   Icon(CupertinoIcons.rectangle_stack, size: 20),
                   SizedBox(width: 8),
-                  Text('Twitter-Style Feed (V2)'),
+                  Text('Dashboard V2 (Feed)'),
                 ],
               ),
               onPressed: () {
@@ -125,6 +132,69 @@ class _MainScreenState extends State<MainScreen> {
                 Get.to(() => DashboardV2Screen(), 
                   transition: Transition.cupertino,
                 );
+              },
+            ),
+            CupertinoActionSheetAction(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(CupertinoIcons.rectangle_3_offgrid, size: 20),
+                  SizedBox(width: 8),
+                  Text('Dashboard V3 (Cards)'),
+                ],
+              ),
+              onPressed: () {
+                Navigator.pop(context);
+                Get.to(() => DashboardV3Screen(),
+                  transition: Transition.cupertino,
+                );
+              },
+            ),
+            CupertinoActionSheetAction(
+              isDestructiveAction: true,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(CupertinoIcons.lab_flask_solid, size: 20),
+                  SizedBox(width: 8),
+                  Text('Dashboard V4 Test (All Versions)'),
+                ],
+              ),
+              onPressed: () {
+                Navigator.pop(context);
+                Get.to(() => DashboardV4TestScreen(),
+                  transition: Transition.cupertino,
+                );
+              },
+            ),
+            CupertinoActionSheetAction(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(CupertinoIcons.speedometer, size: 20),
+                  SizedBox(width: 8),
+                  Text('Optimized Dashboard'),
+                ],
+              ),
+              onPressed: () {
+                Navigator.pop(context);
+                Get.to(() => OptimizedDashboardScreen(),
+                  transition: Transition.cupertino,
+                );
+              },
+            ),
+            CupertinoActionSheetAction(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(CupertinoIcons.rectangle_3_offgrid_fill, size: 20),
+                  SizedBox(width: 8),
+                  Text('Modified Dashboard (Current)'),
+                ],
+              ),
+              onPressed: () {
+                Navigator.pop(context);
+                setState(() => _currentIndex = 0);
               },
             ),
           ],

@@ -15,6 +15,7 @@ class DashboardWidget {
   final int? likes_count;
   final int? comments_count;
   final int? shares_count;
+  int? saves_count;  // Number of saves/bookmarks
   bool like;
   bool save;
   bool follow;
@@ -39,6 +40,7 @@ class DashboardWidget {
     this.likes_count,
     this.comments_count,
     this.shares_count,
+    this.saves_count,
     this.like = false,
     this.save = false,
     this.follow = false,
@@ -65,6 +67,7 @@ class DashboardWidget {
       likes_count: json['likes_count'] ?? 0,
       comments_count: json['comments_count'] ?? 0,
       shares_count: json['shares_count'] ?? 0,
+      saves_count: json['saves_count'] ?? json['shares_count'] ?? 0,  // Use shares_count as fallback
       like: json['like'] ?? false,
       save: json['save'] ?? false,
       follow: json['follow'] ?? false,
@@ -91,6 +94,7 @@ class DashboardWidget {
       'likes_count': likes_count,
       'comments_count': comments_count,
       'shares_count': shares_count,
+      'saves_count': saves_count,
       'like': like,
       'save': save,
       'follow': follow,

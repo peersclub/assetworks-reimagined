@@ -1,7 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-import '../screens/widget_creation_screen.dart';
+import '../screens/widget_studio_screen.dart';
+import '../widgets/widget_studio_launcher.dart';
 
 class TemplateGalleryScreen extends StatefulWidget {
   const TemplateGalleryScreen({Key? key}) : super(key: key);
@@ -125,9 +126,7 @@ class _TemplateGalleryScreenState extends State<TemplateGalleryScreen> {
           padding: EdgeInsets.zero,
           child: Icon(CupertinoIcons.add),
           onPressed: () {
-            Get.to(() => const WidgetCreationScreen(),
-              transition: Transition.cupertino,
-            );
+            WidgetStudioLauncher.launch();
           },
         ),
       ),
@@ -241,10 +240,7 @@ class _TemplateGalleryScreenState extends State<TemplateGalleryScreen> {
             child: Text('Use Template'),
             onPressed: () {
               Navigator.pop(context);
-              Get.to(() => const WidgetCreationScreen(),
-                arguments: {'template': template.title},
-                transition: Transition.cupertino,
-              );
+              WidgetStudioLauncher.launchWithTemplate(template.title);
             },
           ),
           CupertinoActionSheetAction(
@@ -307,10 +303,7 @@ class _TemplateGalleryScreenState extends State<TemplateGalleryScreen> {
             child: Text('Use Template'),
             onPressed: () {
               Navigator.pop(context);
-              Get.to(() => const WidgetCreationScreen(),
-                arguments: {'template': template.title},
-                transition: Transition.cupertino,
-              );
+              WidgetStudioLauncher.launchWithTemplate(template.title);
             },
           ),
         ],

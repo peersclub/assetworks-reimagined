@@ -88,6 +88,8 @@ import 'screens/settings_screen.dart';
 import 'screens/ai_assistant_screen.dart';
 import 'screens/ai_widget_creator_screen.dart';
 import 'screens/dashboard_v2_screen.dart';
+import 'screens/dashboard_v3_screen.dart';
+import 'screens/dashboard_v4_test_screen.dart';
 import 'screens/discovery_screen.dart';
 import 'screens/enhanced_search_screen.dart';
 import 'screens/forgot_password_screen.dart';
@@ -99,11 +101,11 @@ import 'screens/register_screen.dart';
 import 'screens/template_gallery_screen.dart';
 import 'screens/user_onboarding_screen.dart';
 import 'screens/user_profile_screen.dart';
-import 'screens/widget_creation_screen.dart';
 import 'screens/widget_creator_final_screen.dart';
 import 'screens/widget_creator_screen.dart';
 import 'screens/widget_remix_screen.dart';
 import 'screens/widget_view_screen.dart';
+import 'screens/widget_studio_screen.dart';
 import 'screens/all_features_menu.dart';
 
 void main() async {
@@ -255,6 +257,7 @@ class AssetWorksReimagined extends StatelessWidget {
       // Theme changes dynamically based on user selection
       localizationsDelegates: const [
         DefaultCupertinoLocalizations.delegate,
+        DefaultMaterialLocalizations.delegate,
         DefaultWidgetsLocalizations.delegate,
       ],
       initialRoute: '/',
@@ -369,13 +372,13 @@ class AssetWorksReimagined extends StatelessWidget {
           transition: Transition.cupertino,
         ),
         GetPage(
-          name: '/widget-creation',
-          page: () => const WidgetCreationScreen(),
+          name: '/ai-widget-creator',
+          page: () => const AIWidgetCreatorScreen(),
           transition: Transition.cupertino,
         ),
         GetPage(
-          name: '/ai-widget-creator',
-          page: () => const AIWidgetCreatorScreen(),
+          name: '/widget-studio',
+          page: () => const WidgetStudioScreen(),
           transition: Transition.cupertino,
         ),
         GetPage(
@@ -544,3 +547,4 @@ class GetCupertinoApp extends StatelessWidget {
     );
   }
 }
+

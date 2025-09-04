@@ -1,7 +1,7 @@
 name: assetworks_mobile_new
 description: "AssetWorks Mobile - Investment Intelligence Platform"
 publish_to: 'none'
-version: 1.0.0+6
+version: 1.0.1+18
 
 environment:
   sdk: ^3.7.0

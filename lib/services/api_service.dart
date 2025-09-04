@@ -836,15 +836,37 @@ class ApiService extends getx.GetxService {
   // Prompt & Analysis APIs
   Future<Map<String, dynamic>> createWidgetFromPrompt(String prompt) async {
     try {
-      // Extended timeout for analysis operations
+      print('Creating widget from prompt: $prompt');
+      print('Using endpoint: $baseUrl$promptsResult');
+      
+      // Get auth token
+      final token = _storage.read('auth_token');
+      if (token == null || token.isEmpty) {
+        return {
+          'success': false,
+          'message': 'Authentication required. Please login first.',
+        };
+      }
+      
+      // Extended timeout for AI generation
       final response = await _dio.post(
         promptsResult,
-        data: {'prompt': prompt},
+        data: {
+          'prompt': prompt,
+          'user_session_id': null, // Optional session ID
+          'ai_provider': 'claude', // Default to Claude
+        },
         options: Options(
-          receiveTimeout: const Duration(seconds: 300),
-          sendTimeout: const Duration(seconds: 300),
+          receiveTimeout: const Duration(seconds: 120), // 2 minutes for AI generation
+          sendTimeout: const Duration(seconds: 60),
+          headers: {
+            'Authorization': 'Bearer $token',
+          },
         ),
       );
+      
+      print('Response status: ${response.statusCode}');
+      print('Response data: ${response.data}');
       
       if (response.statusCode == 200 && response.data['data'] != null) {
         return {
@@ -855,15 +877,44 @@ class ApiService extends getx.GetxService {
       
       return {
         'success': false,
-        'message': 'Failed to generate widget',
+        'message': response.data['message'] ?? 'Failed to generate widget',
       };
     } catch (e) {
       print('Error creating widget from prompt: $e');
+      
       return {
         'success': false,
-        'message': 'Failed to generate widget',
+        'message': 'Failed to generate widget. Please ensure backend is running.',
       };
     }
+  }
+  
+  // Generate mock widget for testing when API is unavailable
+  Map<String, dynamic> _generateMockWidget(String prompt) {
+    final timestamp = DateTime.now().millisecondsSinceEpoch.toString();
+    return {
+      'success': true,
+      'widget': {
+        'id': 'mock_$timestamp',
+        'title': 'Generated Widget',
+        'description': 'Widget generated from: $prompt',
+        'code': '''
+<div style="padding: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; color: white;">
+  <h2>Mock Widget</h2>
+  <p>This is a mock widget generated because the API is unavailable.</p>
+  <p>Your prompt: $prompt</p>
+  <div style="margin-top: 20px; padding: 15px; background: rgba(255,255,255,0.1); border-radius: 8px;">
+    <strong>Status:</strong> API Offline - Using Local Generation
+  </div>
+</div>
+        ''',
+        'image_url': null,
+        'creator': 'AI System',
+        'category': 'Custom',
+        'tags': ['mock', 'test'],
+        'created_at': DateTime.now().toIso8601String(),
+      }
+    };
   }
   
   Future<List<Map<String, dynamic>>> fetchPromptHistory({

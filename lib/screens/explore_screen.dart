@@ -6,7 +6,7 @@ import '../models/dashboard_widget.dart';
 import '../widgets/widget_card_final.dart';
 import '../widgets/widget_card_shimmer.dart';
 import '../screens/widget_preview_screen.dart';
-import '../screens/widget_creation_screen.dart';
+import '../screens/widget_studio_screen.dart';
 import '../screens/user_profile_screen.dart';
 import '../screens/enhanced_search_screen.dart';
 
@@ -140,7 +140,7 @@ class _ExploreScreenState extends State<ExploreScreen> with SingleTickerProvider
                       padding: EdgeInsets.zero,
                       child: Icon(CupertinoIcons.add_circled_solid),
                       onPressed: () {
-                        Get.to(() => const WidgetCreationScreen(),
+                        Get.to(() => const WidgetStudioScreen(),
                           transition: Transition.cupertino,
                         );
                       },
@@ -658,25 +658,14 @@ class _CreatorCard extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
             ),
             const SizedBox(height: 4),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  '${_formatCount(followers)}',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: CupertinoColors.activeBlue,
-                  ),
-                ),
-                Text(
-                  ' followers',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: CupertinoColors.systemGrey,
-                  ),
-                ),
-              ],
+            Text(
+              '${_formatCount(followers)} followers',
+              style: TextStyle(
+                fontSize: 11,
+                color: CupertinoColors.systemGrey,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
           ],
         ),

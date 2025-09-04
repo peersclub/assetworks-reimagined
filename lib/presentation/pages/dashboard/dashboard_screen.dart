@@ -1,7 +1,9 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:share_plus/share_plus.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../controllers/theme_controller.dart';
 import '../../../core/widgets/app_card.dart';
@@ -9,6 +11,11 @@ import '../../../core/widgets/shimmer_loader.dart';
 import '../../../core/services/haptic_service.dart';
 import '../../controllers/widget_controller.dart';
 import '../../../core/utils/responsive_utils.dart';
+import '../../../services/api_service.dart';
+import '../../../services/dynamic_island_service.dart';
+import '../../../models/dashboard_widget.dart';
+import '../../../data/models/widget_response_model.dart';
+import '../../../widgets/widget_studio_launcher.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({Key? key}) : super(key: key);
@@ -82,6 +89,42 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
                   ),
                   Row(
                     children: [
+                      // Create Widget Button
+                      CupertinoButton(
+                        padding: EdgeInsets.zero,
+                        child: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                CupertinoColors.systemPurple,
+                                CupertinoColors.systemIndigo,
+                              ],
+                            ),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: const Icon(
+                            CupertinoIcons.add,
+                            size: 20,
+                            color: CupertinoColors.white,
+                          ),
+                        ),
+                        onPressed: () {
+                          HapticService.lightImpact();
+                          WidgetStudioLauncher.launch();
+                        },
+                      ),
+                      const SizedBox(width: 8),
+                      CupertinoButton(
+                        padding: EdgeInsets.zero,
+                        child: const Icon(
+                          CupertinoIcons.square_grid_3x2,
+                          size: 24,
+                        ),
+                        onPressed: () {
+                          _showDashboardVersions(context);
+                        },
+                      ),
                       CupertinoButton(
                         padding: EdgeInsets.zero,
                         child: Icon(
@@ -264,7 +307,7 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
                     ),
                     mainAxisSpacing: 12,
                     crossAxisSpacing: 12,
-                    childAspectRatio: 1.0, // Square aspect ratio for icon + text cards
+                    childAspectRatio: 1.2, // Wider aspect ratio to prevent overflow
                     children: [
                       _QuickActionCard(
                         icon: LucideIcons.sparkles,
@@ -577,7 +620,7 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
                           
                           return Column(
                             children: savedWidgets.map((widget) {
-                              return _SavedWidgetCard(widget: widget);
+                              return _WidgetCard(widget: widget);
                             }).toList(),
                           );
                         }),
@@ -625,6 +668,112 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
     if (hour < 17) return 'Afternoon';
     return 'Evening';
   }
+  
+  void _showDashboardVersions(BuildContext context) {
+    HapticService.lightImpact();
+    showCupertinoModalPopup(
+      context: context,
+      builder: (BuildContext context) {
+        return CupertinoActionSheet(
+          title: const Text('Dashboard Versions'),
+          message: const Text('Choose your preferred dashboard layout'),
+          actions: [
+            CupertinoActionSheetAction(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: const [
+                  Icon(CupertinoIcons.rectangle_3_offgrid_fill, size: 20),
+                  SizedBox(width: 8),
+                  Text('Current Dashboard'),
+                ],
+              ),
+              onPressed: () {
+                Navigator.pop(context);
+              },
+            ),
+            CupertinoActionSheetAction(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: const [
+                  Icon(CupertinoIcons.square_grid_2x2, size: 20),
+                  SizedBox(width: 8),
+                  Text('Classic Dashboard'),
+                ],
+              ),
+              onPressed: () {
+                Navigator.pop(context);
+                Get.offNamed('/classic-dashboard');
+              },
+            ),
+            CupertinoActionSheetAction(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: const [
+                  Icon(CupertinoIcons.rectangle_stack, size: 20),
+                  SizedBox(width: 8),
+                  Text('Dashboard V2 (Feed)'),
+                ],
+              ),
+              onPressed: () {
+                Navigator.pop(context);
+                Get.offNamed('/dashboard-v2');
+              },
+            ),
+            CupertinoActionSheetAction(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: const [
+                  Icon(CupertinoIcons.rectangle_3_offgrid, size: 20),
+                  SizedBox(width: 8),
+                  Text('Dashboard V3 (Cards)'),
+                ],
+              ),
+              onPressed: () {
+                Navigator.pop(context);
+                Get.offNamed('/dashboard-v3');
+              },
+            ),
+            CupertinoActionSheetAction(
+              isDestructiveAction: true,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: const [
+                  Icon(CupertinoIcons.lab_flask_solid, size: 20),
+                  SizedBox(width: 8),
+                  Text('Dashboard V4 Test (All Versions)'),
+                ],
+              ),
+              onPressed: () {
+                Navigator.pop(context);
+                Get.offNamed('/dashboard-v4-test');
+              },
+            ),
+            CupertinoActionSheetAction(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: const [
+                  Icon(CupertinoIcons.speedometer, size: 20),
+                  SizedBox(width: 8),
+                  Text('Optimized Dashboard'),
+                ],
+              ),
+              onPressed: () {
+                Navigator.pop(context);
+                Get.offNamed('/optimized-dashboard');
+              },
+            ),
+          ],
+          cancelButton: CupertinoActionSheetAction(
+            isDefaultAction: true,
+            child: const Text('Cancel'),
+            onPressed: () {
+              Navigator.pop(context);
+            },
+          ),
+        );
+      },
+    );
+  }
 }
 
 class _QuickActionCard extends StatelessWidget {
@@ -647,28 +796,33 @@ class _QuickActionCard extends StatelessWidget {
     return AppCard(
       onTap: onTap,
       child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            width: 48,
-            height: 48,
+            width: 32,
+            height: 32,
             decoration: BoxDecoration(
               color: color.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(
               icon,
               color: color,
-              size: 24,
+              size: 16,
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 4),
           Text(
             title,
             style: TextStyle(
-              fontSize: 14,
+              fontSize: 11,
               fontWeight: FontWeight.w500,
               color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
             ),
+            textAlign: TextAlign.center,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
         ],
       ),
@@ -676,67 +830,497 @@ class _QuickActionCard extends StatelessWidget {
   }
 }
 
-class _WidgetCard extends StatelessWidget {
+class _WidgetCard extends StatefulWidget {
   final dynamic widget;
   
   const _WidgetCard({required this.widget});
+  
+  @override
+  State<_WidgetCard> createState() => _WidgetCardState();
+}
+
+class _WidgetCardState extends State<_WidgetCard> with TickerProviderStateMixin {
+  final ApiService _apiService = Get.find<ApiService>();
+  late DashboardWidget dashboardWidget;
+  
+  late AnimationController _likeAnimationController;
+  late AnimationController _saveAnimationController;
+  late AnimationController _shareAnimationController;
+  late Animation<double> _likeScaleAnimation;
+  late Animation<double> _saveScaleAnimation;
+  late Animation<double> _shareScaleAnimation;
+  
+  @override
+  void initState() {
+    super.initState();
+    // Convert to DashboardWidget if needed
+    if (widget.widget is DashboardWidget) {
+      dashboardWidget = widget.widget;
+    } else if (widget.widget is WidgetResponseModel) {
+      final w = widget.widget as WidgetResponseModel;
+      dashboardWidget = DashboardWidget(
+        id: w.id,
+        title: w.title,
+        tagline: w.tagline,
+        summary: w.summary,
+        username: w.username,
+        created_at: DateTime.fromMillisecondsSinceEpoch(w.createdAt),
+        likes_count: w.likes,
+        shares_count: w.shares,
+        saves_count: 0, // WidgetResponseModel doesn't track saves_count
+        like: w.like ?? false,
+        save: w.save ?? false,
+      );
+    } else {
+      // Fallback for dynamic objects
+      dashboardWidget = DashboardWidget(
+        id: dashboardWidget.id ?? '',
+        title: dashboardWidget.title,
+        tagline: dashboardWidget.tagline,
+        summary: dashboardWidget.summary,
+        username: dashboardWidget.username,
+        created_at: dashboardWidget.created_at,
+        likes_count: dashboardWidget.likes_count ?? 0,
+        shares_count: dashboardWidget.shares_count ?? 0,
+        saves_count: dashboardWidget.saves_count ?? 0,
+        like: dashboardWidget.like ?? false,
+        save: dashboardWidget.save ?? false,
+      );
+    }
+    _initAnimations();
+  }
+  
+  void _initAnimations() {
+    // Like animation
+    _likeAnimationController = AnimationController(
+      duration: const Duration(milliseconds: 600),
+      vsync: this,
+    );
+    _likeScaleAnimation = Tween<double>(
+      begin: 1.0,
+      end: 1.3,
+    ).animate(CurvedAnimation(
+      parent: _likeAnimationController,
+      curve: Curves.elasticOut,
+    ));
+    
+    // Save animation
+    _saveAnimationController = AnimationController(
+      duration: const Duration(milliseconds: 600),
+      vsync: this,
+    );
+    _saveScaleAnimation = Tween<double>(
+      begin: 1.0,
+      end: 1.3,
+    ).animate(CurvedAnimation(
+      parent: _saveAnimationController,
+      curve: Curves.elasticOut,
+    ));
+    
+    // Share animation
+    _shareAnimationController = AnimationController(
+      duration: const Duration(milliseconds: 300),
+      vsync: this,
+    );
+    _shareScaleAnimation = Tween<double>(
+      begin: 1.0,
+      end: 0.9,
+    ).animate(CurvedAnimation(
+      parent: _shareAnimationController,
+      curve: Curves.easeInOut,
+    ));
+  }
+  
+  @override
+  void dispose() {
+    _likeAnimationController.dispose();
+    _saveAnimationController.dispose();
+    _shareAnimationController.dispose();
+    super.dispose();
+  }
+  
+  Future<void> _handleLike() async {
+    HapticFeedback.mediumImpact();
+    _likeAnimationController.forward().then((_) {
+      _likeAnimationController.reverse();
+    });
+    
+    final success = dashboardWidget.like
+        ? await _apiService.dislikeWidget(dashboardWidget.id)
+        : await _apiService.likeWidget(dashboardWidget.id);
+    
+    if (success) {
+      setState(() {
+        dashboardWidget.like = !dashboardWidget.like;
+      });
+      HapticFeedback.heavyImpact();
+      DynamicIslandService().updateStatus(
+        dashboardWidget.like ? 'Liked!' : 'Unliked',
+        icon: dashboardWidget.like ? CupertinoIcons.heart_fill : CupertinoIcons.heart,
+      );
+    }
+  }
+  
+  Future<void> _handleSave() async {
+    HapticFeedback.mediumImpact();
+    _saveAnimationController.forward().then((_) {
+      _saveAnimationController.reverse();
+    });
+    
+    final success = await _apiService.saveWidgetToProfile(dashboardWidget.id);
+    
+    if (success) {
+      setState(() {
+        dashboardWidget.save = !dashboardWidget.save;
+        if (dashboardWidget.save) {
+          dashboardWidget.saves_count = (dashboardWidget.saves_count ?? 0) + 1;
+        } else if (dashboardWidget.saves_count != null && dashboardWidget.saves_count! > 0) {
+          dashboardWidget.saves_count = dashboardWidget.saves_count! - 1;
+        }
+      });
+      HapticFeedback.heavyImpact();
+      DynamicIslandService().updateStatus(
+        dashboardWidget.save ? 'Saved to dashboard!' : 'Removed from dashboard',
+        icon: dashboardWidget.save ? Icons.bookmark : Icons.bookmark_border,
+      );
+    }
+  }
+  
+  Future<void> _handleShare() async {
+    HapticFeedback.mediumImpact();
+    _shareAnimationController.forward().then((_) {
+      _shareAnimationController.reverse();
+    });
+    
+    // Show share options including remix
+    showCupertinoModalPopup(
+      context: context,
+      builder: (BuildContext context) {
+        return CupertinoActionSheet(
+          title: Text('Widget Options'),
+          message: Text(dashboardWidget.title ?? 'Widget'),
+          actions: [
+            CupertinoActionSheetAction(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(CupertinoIcons.share, size: 20),
+                  SizedBox(width: 8),
+                  Text('Share Widget'),
+                ],
+              ),
+              onPressed: () async {
+                Navigator.pop(context);
+                await Share.share(
+                  'Check out this amazing widget: ${dashboardWidget.title}\n'
+                  'https://assetworks.ai/widget/${dashboardWidget.id}',
+                  subject: 'AssetWorks Widget',
+                );
+                
+                // Track share action
+                _apiService.trackActivity(
+                  action: 'shared',
+                  widgetId: dashboardWidget.id,
+                  metadata: {
+                    'source': 'classic_dashboard',
+                    'timestamp': DateTime.now().toIso8601String(),
+                  },
+                );
+              },
+            ),
+            CupertinoActionSheetAction(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(LucideIcons.sparkles, size: 20, color: CupertinoColors.systemPurple),
+                  SizedBox(width: 8),
+                  Text('Remix Widget', style: TextStyle(color: CupertinoColors.systemPurple)),
+                ],
+              ),
+              onPressed: () {
+                Navigator.pop(context);
+                WidgetStudioLauncher.remix(
+                  widgetTitle: dashboardWidget.title ?? 'Untitled Widget',
+                  widgetDescription: dashboardWidget.description,
+                );
+              },
+            ),
+            CupertinoActionSheetAction(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(CupertinoIcons.doc_on_clipboard, size: 20),
+                  SizedBox(width: 8),
+                  Text('Copy Link'),
+                ],
+              ),
+              onPressed: () {
+                Navigator.pop(context);
+                Clipboard.setData(ClipboardData(
+                  text: 'https://assetworks.ai/widget/${dashboardWidget.id}'
+                ));
+                HapticService.success();
+              },
+            ),
+          ],
+          cancelButton: CupertinoActionSheetAction(
+            isDefaultAction: true,
+            child: Text('Cancel'),
+            onPressed: () {
+              Navigator.pop(context);
+            },
+          ),
+        );
+      },
+    );
+  }
   
   @override
   Widget build(BuildContext context) {
     final isDark = CupertinoTheme.of(context).brightness == Brightness.dark;
     
     return AppCard(
-      margin: const EdgeInsets.only(bottom: 12),
-      onTap: () => Get.toNamed('/widget-view', arguments: widget),
-      child: Row(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: EdgeInsets.zero,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            width: 60,
-            height: 60,
-            decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(
-              LucideIcons.sparkles,
-              color: AppColors.primary,
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+          // Header with user info
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+            child: Row(
               children: [
-                Text(
-                  widget.title ?? 'Untitled Widget',
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
+                // User Avatar
+                Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: LinearGradient(
+                      colors: [
+                        AppColors.primary,
+                        AppColors.primary.withOpacity(0.7),
+                      ],
+                    ),
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+                  child: Center(
+                    child: Text(
+                      (dashboardWidget.username?.isNotEmpty == true
+                          ? dashboardWidget.username![0]
+                          : 'U').toUpperCase(),
+                      style: const TextStyle(
+                        color: CupertinoColors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  widget.tagline ?? widget.summary ?? '',
-                  style: TextStyle(
-                    fontSize: 13,
+                const SizedBox(width: 12),
+                // Username and time
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        dashboardWidget.username ?? 'Anonymous',
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      if (dashboardWidget.created_at != null)
+                        Text(
+                          _getTimeAgo(dashboardWidget.created_at!),
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+                // More options button
+                CupertinoButton(
+                  padding: EdgeInsets.zero,
+                  child: Icon(
+                    CupertinoIcons.ellipsis,
+                    size: 20,
                     color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
                   ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
+                  onPressed: () {
+                    // Show more options
+                  },
                 ),
               ],
             ),
           ),
-          Icon(
-            LucideIcons.chevronRight,
-            size: 20,
-            color: isDark ? AppColors.neutral600 : AppColors.neutral400,
+          
+          // Main content
+          GestureDetector(
+            onTap: () => Get.toNamed('/widget-view', arguments: dashboardWidget),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    dashboardWidget.title ?? 'Untitled Widget',
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    dashboardWidget.tagline ?? dashboardWidget.summary ?? '',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+                      height: 1.4,
+                    ),
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          
+          const SizedBox(height: 12),
+          
+          // Engagement buttons
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+            child: Row(
+              children: [
+                // Like button
+                AnimatedBuilder(
+                  animation: _likeScaleAnimation,
+                  builder: (context, child) {
+                    return Transform.scale(
+                      scale: _likeScaleAnimation.value,
+                      child: _buildEngagementButton(
+                        icon: dashboardWidget.like
+                            ? CupertinoIcons.heart_fill
+                            : CupertinoIcons.heart,
+                        count: dashboardWidget.likes_count ?? 0,
+                        color: dashboardWidget.like
+                            ? CupertinoColors.systemRed
+                            : null,
+                        onTap: _handleLike,
+                      ),
+                    );
+                  },
+                ),
+                const SizedBox(width: 24),
+                // Save button
+                AnimatedBuilder(
+                  animation: _saveScaleAnimation,
+                  builder: (context, child) {
+                    return Transform.scale(
+                      scale: _saveScaleAnimation.value,
+                      child: _buildEngagementButton(
+                        icon: dashboardWidget.save
+                            ? Icons.bookmark
+                            : Icons.bookmark_border,
+                        count: dashboardWidget.saves_count ?? 0,
+                        color: dashboardWidget.save
+                            ? CupertinoColors.systemBlue
+                            : null,
+                        onTap: _handleSave,
+                      ),
+                    );
+                  },
+                ),
+                const SizedBox(width: 24),
+                // Share button
+                AnimatedBuilder(
+                  animation: _shareScaleAnimation,
+                  builder: (context, child) {
+                    return Transform.scale(
+                      scale: _shareScaleAnimation.value,
+                      child: _buildEngagementButton(
+                        icon: CupertinoIcons.share,
+                        count: dashboardWidget.shares_count ?? 0,
+                        onTap: _handleShare,
+                      ),
+                    );
+                  },
+                ),
+                const Spacer(),
+                // View detail
+                Icon(
+                  CupertinoIcons.arrow_right_circle,
+                  size: 22,
+                  color: AppColors.primary,
+                ),
+              ],
+            ),
           ),
         ],
       ),
     );
+  }
+  
+  Widget _buildEngagementButton({
+    required IconData icon,
+    required int count,
+    Color? color,
+    required VoidCallback onTap,
+  }) {
+    final isDark = CupertinoTheme.of(context).brightness == Brightness.dark;
+    final defaultColor = isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight;
+    
+    return GestureDetector(
+      onTap: onTap,
+      child: Row(
+        children: [
+          Icon(
+            icon,
+            size: 22,
+            color: color ?? defaultColor,
+          ),
+          const SizedBox(width: 6),
+          Text(
+            count > 0 ? _formatCount(count) : '',
+            style: TextStyle(
+              fontSize: 13,
+              color: color ?? defaultColor,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+  
+  String _formatCount(int count) {
+    if (count >= 1000000) {
+      return '${(count / 1000000).toStringAsFixed(1)}M';
+    } else if (count >= 1000) {
+      return '${(count / 1000).toStringAsFixed(1)}K';
+    }
+    return count.toString();
+  }
+  
+  String _getTimeAgo(DateTime dateTime) {
+    final now = DateTime.now();
+    final difference = now.difference(dateTime);
+    
+    if (difference.inDays > 7) {
+      return '${(difference.inDays / 7).floor()}w ago';
+    } else if (difference.inDays > 0) {
+      return '${difference.inDays}d ago';
+    } else if (difference.inHours > 0) {
+      return '${difference.inHours}h ago';
+    } else if (difference.inMinutes > 0) {
+      return '${difference.inMinutes}m ago';
+    } else {
+      return 'Just now';
+    }
   }
 }
 
@@ -844,7 +1428,7 @@ class _SavedWidgetCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Saved ${_formatDate(widget.savedAt ?? widget.createdAt ?? DateTime.now())}',
+                  'Saved ${_formatDate(DateTime.fromMillisecondsSinceEpoch(widget.updatedAt))}',
                   style: TextStyle(
                     fontSize: 11,
                     color: isDark ? AppColors.neutral600 : AppColors.neutral400,

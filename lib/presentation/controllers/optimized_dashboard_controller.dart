@@ -35,8 +35,14 @@ class OptimizedDashboardController extends GetxController {
   
   // Data
   final dashboardWidgets = <WidgetModel>[].obs;
+  final filteredDashboardWidgets = <WidgetModel>[].obs;
   final trendingWidgets = <WidgetModel>[].obs;
+  final filteredTrendingWidgets = <WidgetModel>[].obs;
   final popularAnalysis = <AnalysisModel>[].obs;
+  
+  // Filter state
+  final showOnlyMyWidgets = false.obs;
+  String? currentUserId;
   
   // Pagination
   final currentPage = 1.obs;
@@ -52,12 +58,51 @@ class OptimizedDashboardController extends GetxController {
     super.onInit();
     // Load all data in parallel with proper error handling
     loadInitialData();
+    _getCurrentUser();
+  }
+  
+  Future<void> _getCurrentUser() async {
+    try {
+      // Try to get user ID from stored auth info
+      final authData = await _cacheService.getOrFetch(
+        key: 'user_profile',
+        fetcher: () async => null,
+        ttl: CacheService.longCache,
+      );
+      if (authData != null && authData is Map) {
+        currentUserId = authData['id'] ?? authData['user_id'];
+      }
+    } catch (e) {
+      // Silently handle error
+    }
   }
   
   @override
   void onClose() {
     _debounceTimer?.cancel();
     super.onClose();
+  }
+  
+  void toggleMyWidgetsFilter() {
+    showOnlyMyWidgets.value = !showOnlyMyWidgets.value;
+    _applyFilter();
+    HapticService.lightImpact();
+  }
+  
+  void _applyFilter() {
+    if (showOnlyMyWidgets.value && currentUserId != null) {
+      filteredDashboardWidgets.value = dashboardWidgets.where((w) => 
+        w.authorId == currentUserId || 
+        w.authorName == currentUserId
+      ).toList();
+      filteredTrendingWidgets.value = trendingWidgets.where((w) => 
+        w.authorId == currentUserId || 
+        w.authorName == currentUserId
+      ).toList();
+    } else {
+      filteredDashboardWidgets.value = dashboardWidgets;
+      filteredTrendingWidgets.value = trendingWidgets;
+    }
   }
   
   // Load all initial data in parallel
@@ -98,11 +143,13 @@ class OptimizedDashboardController extends GetxController {
       // Update UI with cached data
       if (results[0] is List && (results[0] as List).isNotEmpty) {
         dashboardWidgets.value = results[0] as List<WidgetModel>;
+        _applyFilter();
         dashboardState.value = LoadingState.loaded;
       }
       
       if (results[1] is List && (results[1] as List).isNotEmpty) {
         trendingWidgets.value = results[1] as List<WidgetModel>;
+        _applyFilter();
         trendingState.value = LoadingState.loaded;
       }
       
@@ -154,6 +201,7 @@ class OptimizedDashboardController extends GetxController {
       } else {
         dashboardWidgets.addAll(widgets);
       }
+      _applyFilter();
       
       hasMore.value = widgets.length >= pageSize;
       dashboardState.value = dashboardWidgets.isEmpty 
@@ -199,6 +247,7 @@ class OptimizedDashboardController extends GetxController {
       );
       
       trendingWidgets.value = widgets;
+      _applyFilter();
       trendingState.value = widgets.isEmpty 
           ? LoadingState.empty 
           : LoadingState.loaded;

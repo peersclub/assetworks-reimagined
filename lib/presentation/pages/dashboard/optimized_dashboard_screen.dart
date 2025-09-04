@@ -8,7 +8,7 @@ import '../../../core/widgets/empty_state_widget.dart';
 import '../../../core/widgets/error_state_widget.dart';
 import '../../../core/services/haptic_service.dart';
 import '../../controllers/optimized_dashboard_controller.dart';
-import '../../widgets/compact_widget_card.dart';
+import '../../widgets/interactive_compact_widget_card.dart';
 
 class OptimizedDashboardScreen extends StatefulWidget {
   const OptimizedDashboardScreen({Key? key}) : super(key: key);
@@ -98,6 +98,11 @@ class _OptimizedDashboardScreenState extends State<OptimizedDashboardScreen>
             // Stats Card
             SliverToBoxAdapter(
               child: _buildStatsCard(isDark),
+            ),
+            
+            // Filter Chips
+            SliverToBoxAdapter(
+              child: _buildFilterChips(),
             ),
             
             // Quick Actions
@@ -193,7 +198,7 @@ class _OptimizedDashboardScreenState extends State<OptimizedDashboardScreen>
                   return const ShimmerText(width: 100, height: 32);
                 }
                 return Text(
-                  '${_controller.dashboardWidgets.length}',
+                  '${_controller.filteredDashboardWidgets.length}',
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 32,
@@ -210,7 +215,7 @@ class _OptimizedDashboardScreenState extends State<OptimizedDashboardScreen>
               ),
               const SizedBox(height: 8),
               Obx(() => Text(
-                '${_controller.trendingWidgets.length} trending • ${_controller.popularAnalysis.length} analyses',
+                '${_controller.filteredTrendingWidgets.length} trending • ${_controller.popularAnalysis.length} analyses',
                 style: const TextStyle(
                   color: Colors.white70,
                   fontSize: 13,
@@ -220,6 +225,39 @@ class _OptimizedDashboardScreenState extends State<OptimizedDashboardScreen>
           ),
         ),
       ),
+    );
+  }
+  
+  Widget _buildFilterChips() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Obx(() => Row(
+        children: [
+          FilterChip(
+            label: const Text('All Widgets'),
+            selected: !_controller.showOnlyMyWidgets.value,
+            onSelected: (selected) {
+              if (_controller.showOnlyMyWidgets.value) {
+                _controller.toggleMyWidgetsFilter();
+              }
+            },
+            selectedColor: AppColors.primary.withOpacity(0.2),
+            checkmarkColor: AppColors.primary,
+          ),
+          const SizedBox(width: 8),
+          FilterChip(
+            label: const Text('By Me'),
+            selected: _controller.showOnlyMyWidgets.value,
+            onSelected: (selected) {
+              if (!_controller.showOnlyMyWidgets.value) {
+                _controller.toggleMyWidgetsFilter();
+              }
+            },
+            selectedColor: AppColors.primary.withOpacity(0.2),
+            checkmarkColor: AppColors.primary,
+          ),
+        ],
+      )),
     );
   }
   
@@ -240,7 +278,7 @@ class _OptimizedDashboardScreenState extends State<OptimizedDashboardScreen>
             crossAxisCount: 2,
             mainAxisSpacing: 12,
             crossAxisSpacing: 12,
-            childAspectRatio: 2.5,
+            childAspectRatio: 3.0,
             children: [
               _QuickActionCard(
                 icon: LucideIcons.sparkles,
@@ -299,12 +337,12 @@ class _OptimizedDashboardScreenState extends State<OptimizedDashboardScreen>
           return Padding(
             padding: const EdgeInsets.all(16),
             child: ErrorStateWidget.networkError(
-              onRetry: () => _controller._loadTrendingWidgets(useCache: false),
+              onRetry: () => _controller.loadInitialData(),
             ),
           );
           
         case LoadingState.loaded:
-          if (_controller.trendingWidgets.isEmpty) return const SizedBox.shrink();
+          if (_controller.filteredTrendingWidgets.isEmpty) return const SizedBox.shrink();
           
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -344,19 +382,15 @@ class _OptimizedDashboardScreenState extends State<OptimizedDashboardScreen>
                 child: ListView.builder(
                   scrollDirection: Axis.horizontal,
                   padding: const EdgeInsets.symmetric(horizontal: 16),
-                  itemCount: _controller.trendingWidgets.take(5).length,
+                  itemCount: _controller.filteredTrendingWidgets.take(5).length,
                   itemBuilder: (context, index) {
-                    final widget = _controller.trendingWidgets[index];
+                    final widget = _controller.filteredTrendingWidgets[index];
                     return Padding(
                       padding: const EdgeInsets.only(right: 12),
                       child: SizedBox(
                         width: 280,
-                        child: CompactWidgetCard(
-                          title: widget.title,
-                          author: widget.author,
-                          date: widget.createdAt,
-                          likes: widget.likes,
-                          category: widget.category,
+                        child: InteractiveCompactWidgetCard(
+                          widget: widget,
                           onTap: () {
                             HapticService.lightImpact();
                             Get.toNamed('/widget-detail', arguments: widget);
@@ -422,24 +456,20 @@ class _OptimizedDashboardScreenState extends State<OptimizedDashboardScreen>
                 crossAxisCount: 2,
                 mainAxisSpacing: 12,
                 crossAxisSpacing: 12,
-                childAspectRatio: 0.85,
+                childAspectRatio: 0.75,
               ),
               delegate: SliverChildBuilderDelegate(
                 (context, index) {
-                  final widget = _controller.dashboardWidgets[index];
-                  return CompactWidgetCard(
-                    title: widget.title,
-                    author: widget.author,
-                    date: widget.createdAt,
-                    likes: widget.likes,
-                    category: widget.category,
+                  final widget = _controller.filteredDashboardWidgets[index];
+                  return InteractiveCompactWidgetCard(
+                    widget: widget,
                     onTap: () {
                       HapticService.lightImpact();
                       Get.toNamed('/widget-detail', arguments: widget);
                     },
                   );
                 },
-                childCount: _controller.dashboardWidgets.length,
+                childCount: _controller.filteredDashboardWidgets.length,
               ),
             ),
           );
@@ -493,12 +523,16 @@ class _QuickActionCard extends StatelessWidget {
             children: [
               Icon(icon, color: color, size: 20),
               const SizedBox(width: 8),
-              Text(
-                title,
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
+              Flexible(
+                child: Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
                 ),
               ),
             ],

@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'dart:math';
 import '../services/api_service.dart';
@@ -235,7 +236,12 @@ class TwitterStyleWidgetCard extends StatefulWidget {
   State<TwitterStyleWidgetCard> createState() => _TwitterStyleWidgetCardState();
 }
 
-class _TwitterStyleWidgetCardState extends State<TwitterStyleWidgetCard> {
+class _TwitterStyleWidgetCardState extends State<TwitterStyleWidgetCard> with TickerProviderStateMixin {
+  late AnimationController _likeAnimationController;
+  late AnimationController _saveAnimationController;
+  late Animation<double> _likeScaleAnimation;
+  late Animation<double> _saveScaleAnimation;
+  
   late WebViewController _webViewController;
   bool _isWebViewLoading = true;
   
@@ -243,6 +249,38 @@ class _TwitterStyleWidgetCardState extends State<TwitterStyleWidgetCard> {
   void initState() {
     super.initState();
     _initWebView();
+    
+    _likeAnimationController = AnimationController(
+      duration: const Duration(milliseconds: 200),
+      vsync: this,
+    );
+    _saveAnimationController = AnimationController(
+      duration: const Duration(milliseconds: 200),
+      vsync: this,
+    );
+    
+    _likeScaleAnimation = Tween<double>(
+      begin: 1.0,
+      end: 1.3,
+    ).animate(CurvedAnimation(
+      parent: _likeAnimationController,
+      curve: Curves.elasticOut,
+    ));
+    
+    _saveScaleAnimation = Tween<double>(
+      begin: 1.0,
+      end: 1.3,
+    ).animate(CurvedAnimation(
+      parent: _saveAnimationController,
+      curve: Curves.elasticOut,
+    ));
+  }
+  
+  @override
+  void dispose() {
+    _likeAnimationController.dispose();
+    _saveAnimationController.dispose();
+    super.dispose();
   }
   
   void _initWebView() {
@@ -468,25 +506,39 @@ class _TwitterStyleWidgetCardState extends State<TwitterStyleWidgetCard> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  _buildEngagementButton(
-                    icon: widget.widget.like 
-                        ? CupertinoIcons.heart_fill
-                        : CupertinoIcons.heart,
-                    count: widget.widget.likes_count ?? 0,
-                    color: widget.widget.like 
-                        ? CupertinoColors.systemRed
-                        : CupertinoColors.systemGrey,
-                    onTap: () async {
-                      HapticFeedback.lightImpact();
-                      final success = widget.widget.like
-                          ? await _apiService.dislikeWidget(widget.widget.id)
-                          : await _apiService.likeWidget(widget.widget.id);
-                      if (success) {
-                        setState(() {
-                          widget.widget.like = !widget.widget.like;
-                          // likes_count is read-only, will be updated from server
-                        });
-                      }
+                  AnimatedBuilder(
+                    animation: _likeScaleAnimation,
+                    builder: (context, child) {
+                      return Transform.scale(
+                        scale: _likeScaleAnimation.value,
+                        child: _buildEngagementButton(
+                          icon: widget.widget.like 
+                              ? CupertinoIcons.heart_fill
+                              : CupertinoIcons.heart,
+                          count: widget.widget.likes_count ?? 0,
+                          color: widget.widget.like 
+                              ? CupertinoColors.systemRed
+                              : CupertinoColors.systemGrey,
+                          onTap: () async {
+                            // Trigger animation
+                            HapticFeedback.mediumImpact();
+                            _likeAnimationController.forward().then((_) {
+                              _likeAnimationController.reverse();
+                            });
+                            
+                            final success = widget.widget.like
+                                ? await _apiService.dislikeWidget(widget.widget.id)
+                                : await _apiService.likeWidget(widget.widget.id);
+                            if (success) {
+                              setState(() {
+                                widget.widget.like = !widget.widget.like;
+                                // Note: likes_count is final, so we can't update it locally
+                                // The actual count will be updated from the backend on refresh
+                              });
+                            }
+                          },
+                        ),
+                      );
                     },
                   ),
                   _buildEngagementButton(
@@ -498,30 +550,84 @@ class _TwitterStyleWidgetCardState extends State<TwitterStyleWidgetCard> {
                       // Open comments
                     },
                   ),
-                  _buildEngagementButton(
-                    icon: widget.widget.save
-                        ? CupertinoIcons.bookmark_fill
-                        : CupertinoIcons.bookmark,
-                    count: widget.widget.shares_count ?? 0,
-                    color: widget.widget.save
-                        ? CupertinoColors.systemIndigo
-                        : CupertinoColors.systemGrey,
-                    onTap: () async {
-                      HapticFeedback.lightImpact();
-                      final success = await _apiService.saveWidgetToProfile(widget.widget.id);
-                      if (success) {
-                        setState(() {
-                          widget.widget.save = !widget.widget.save;
-                        });
-                      }
+                  AnimatedBuilder(
+                    animation: _saveScaleAnimation,
+                    builder: (context, child) {
+                      return Transform.scale(
+                        scale: _saveScaleAnimation.value,
+                        child: _buildEngagementButton(
+                          icon: widget.widget.save
+                              ? Icons.bookmark
+                              : Icons.bookmark_border,
+                          count: widget.widget.saves_count ?? 0,  // Show saves count, not shares
+                          color: widget.widget.save
+                              ? CupertinoColors.systemBlue
+                              : CupertinoColors.systemGrey,
+                          onTap: () async {
+                            // Trigger animation
+                            HapticFeedback.mediumImpact();
+                            _saveAnimationController.forward().then((_) {
+                              _saveAnimationController.reverse();
+                            });
+                            
+                            final success = await _apiService.saveWidgetToProfile(widget.widget.id);
+                            if (success) {
+                              setState(() {
+                                widget.widget.save = !widget.widget.save;
+                                if (widget.widget.save) {
+                                  widget.widget.saves_count = (widget.widget.saves_count ?? 0) + 1;
+                                } else {
+                                  widget.widget.saves_count = (widget.widget.saves_count ?? 1) - 1;
+                                }
+                              });
+                              
+                              // Show success feedback
+                              if (widget.widget.save) {
+                                Get.snackbar(
+                                  'Saved',
+                                  'Added to your saved widgets',
+                                  snackPosition: SnackPosition.TOP,
+                                  duration: Duration(seconds: 2),
+                                  backgroundColor: CupertinoColors.systemBlue.withOpacity(0.9),
+                                  colorText: CupertinoColors.white,
+                                  margin: EdgeInsets.all(12),
+                                  borderRadius: 8,
+                                );
+                              }
+                            }
+                          },
+                        ),
+                      );
                     },
                   ),
                   _buildEngagementButton(
                     icon: CupertinoIcons.share,
+                    count: widget.widget.shares_count ?? 0,
                     color: CupertinoColors.systemGrey,
-                    onTap: () {
-                      HapticFeedback.lightImpact();
-                      // Share widget
+                    onTap: () async {
+                      HapticFeedback.mediumImpact();
+                      
+                      // Share widget using native share sheet
+                      final String shareText = '''
+Check out this widget on AssetWorks:
+${widget.widget.title}
+
+${widget.widget.summary ?? ''}
+
+View it here: ${widget.widget.preview_version_url ?? 'https://assetworks.ai'}
+''';
+                      
+                      await Share.share(shareText);
+                      
+                      // Track share action
+                      _apiService.trackActivity(
+                        action: 'shared',
+                        widgetId: widget.widget.id,
+                        metadata: {
+                          'source': 'dashboard_v2',
+                          'timestamp': DateTime.now().toIso8601String(),
+                        },
+                      );
                     },
                   ),
                 ],
